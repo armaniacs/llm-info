@@ -20,7 +20,7 @@ func TestEndpointFallbackIntegration(t *testing.T) {
 		expectError       bool
 	}{
 		{
-			name:              "LiteLLM available, no fallback",
+			name:              "Both endpoints available, LiteLLM enhances",
 			litellmAvailable:  true,
 			standardAvailable: true,
 			expectedModels:    2,
@@ -28,10 +28,18 @@ func TestEndpointFallbackIntegration(t *testing.T) {
 			expectError:       false,
 		},
 		{
-			name:              "LiteLLM unavailable, fallback to standard",
+			name:              "Standard available, LiteLLM unavailable",
 			litellmAvailable:  false,
 			standardAvailable: true,
 			expectedModels:    1,
+			expectFallback:    false,
+			expectError:       false,
+		},
+		{
+			name:              "Standard unavailable, LiteLLM available",
+			litellmAvailable:  true,
+			standardAvailable: false,
+			expectedModels:    2,
 			expectFallback:    true,
 			expectError:       false,
 		},
@@ -110,7 +118,7 @@ func TestEndpointFallbackIntegration(t *testing.T) {
 }
 
 func TestEndpointPriorityIntegration(t *testing.T) {
-	// LiteLLMとOpenAI標準の両方が利用可能な場合、LiteLLMが優先されることをテスト
+	// OpenAI標準を先に試すが、両方が利用可能な場合、詳細情報を持つLiteLLMのレスポンスが返されることをテスト
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path == "/model/info" {
 			// LiteLLMエンドポイント

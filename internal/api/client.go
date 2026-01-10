@@ -117,22 +117,34 @@ func getDefaultStatusMessage(statusCode int) string {
 	}
 }
 
-// FetchModelsWithFallback はLiteLLMエンドポイントを試行し、失敗した場合はOpenAI標準エンドポイントにフォールバックする
+// FetchModelsWithFallback はOpenAI標準エンドポイントを試行し、詳細情報の取得も試みる
 func (c *Client) FetchModelsWithFallback() (*ModelInfoResponse, error) {
-	// まずLiteLLMエンドポイントを試行
-	models, err := c.GetModelInfo()
-	if err == nil {
-		return models, nil
+	// まずOpenAI標準エンドポイントを試行
+	standardResp, standardErr := c.FetchStandardModels()
+	if standardErr == nil {
+		// 基本情報を内部形式に変換
+		baseModels := c.convertStandardResponse(standardResp)
+
+		// 詳細情報の追加取得を試行
+		litellmResp, litellmErr := c.GetModelInfo()
+		if litellmErr == nil {
+			// 詳細情報が取得できた場合はそちらを優先
+			return litellmResp, nil
+		}
+
+		// 詳細情報取得失敗は警告のみ（基本情報は返す）
+		// 処理は継続
+		return baseModels, nil
 	}
 
-	fmt.Printf("⚠️  LiteLLM endpoint failed, falling back to OpenAI standard endpoint: %v\n", err)
+	// 標準エンドポイント失敗時の警告
+	fmt.Printf("⚠️  OpenAI standard endpoint failed, falling back to LiteLLM endpoint: %v\n", standardErr)
 
-	// OpenAI標準エンドポイントを試行
-	standardResp, err := c.FetchStandardModels()
-	if err != nil {
-		return nil, fmt.Errorf("both endpoints failed: LiteLLM error: %v, Standard error: %w", err, err)
+	// LiteLLMエンドポイントを試行
+	litellmResp, litellmErr := c.GetModelInfo()
+	if litellmErr != nil {
+		return nil, fmt.Errorf("both endpoints failed: Standard error: %v, LiteLLM error: %w", standardErr, litellmErr)
 	}
 
-	// 標準レスポンスを内部形式に変換
-	return c.convertStandardResponse(standardResp), nil
+	return litellmResp, nil
 }

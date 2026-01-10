@@ -458,7 +458,7 @@ make test-coverage     # カバレッジ付きテスト
 ## 詳細情報へのリンク
 
 - [README.md](README.md): 包括的なプロジェクト情報
-- [API仕様](knowledge/spec.md): LiteLLM互換エンドポイント仕様
+- [API仕様](plan/spec.md): LiteLLM互換エンドポイント仕様
 - [開発ガイド](plans/mvp-development-guide.md): 開発者向け詳細情報
 - [ロードマップ](plans/llm-info-roadmap.md): 将来の機能計画
 

@@ -59,3 +59,8 @@ config.local.yaml
 # Debug files
 debug
 debug.test
+
+test/env/
+test/logs/
+test/reports/
+test/.cache/

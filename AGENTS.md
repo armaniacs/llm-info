@@ -2,6 +2,8 @@
 
 This document describes the various agents/components that make up the `llm-info` CLI tool for visualizing LLM gateway information.
 
+read `DEVELOPMENT.md` for coding, testing and development.
+
 ## Core Agents
 
 ### 1. API Client Agent
