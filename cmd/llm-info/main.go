@@ -158,6 +158,12 @@ func main() {
 	// APIクライアントの作成
 	client := api.NewClient(cfg)
 
+	// エンドポイントURLを表示（エラー時にも表示するため）
+	if err := ui.DisplayEndpoint(resolvedConfig.Gateway.URL); err != nil {
+		// URL表示エラーは処理を継続
+		fmt.Fprintf(os.Stderr, "Warning: failed to display endpoint: %v\n", err)
+	}
+
 	// モデル情報の取得（フォールバック機能付き）
 	if verbose {
 		fmt.Printf("Fetching model information from %s...\n", resolvedConfig.Gateway.URL)
