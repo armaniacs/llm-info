@@ -121,7 +121,7 @@ func TestAdvancedDisplayFeatures(t *testing.T) {
 	})
 
 	t.Run("JSON output with filter", func(t *testing.T) {
-		cmd := exec.Command(binaryPath, "--url", "http://localhost:8080", "--api-key", "test-key", "--output", "json", "--filter", "mode:chat")
+		cmd := exec.Command(binaryPath, "--url", "http://localhost:8080", "--api-key", "test-key", "--format", "json", "--filter", "mode:chat")
 		output, err := cmd.CombinedOutput()
 		if err != nil {
 			t.Logf("Command output: %s", string(output))
@@ -264,7 +264,7 @@ func TestAdvancedDisplayWorkflow(t *testing.T) {
 
 	t.Run("complete workflow", func(t *testing.T) {
 		// 1. すべてのモデルを取得
-		cmd := exec.Command(binaryPath, "--url", "http://localhost:8080", "--api-key", "test-key", "--output", "json")
+		cmd := exec.Command(binaryPath, "--url", "http://localhost:8080", "--api-key", "test-key", "--format", "json")
 		output, err := cmd.CombinedOutput()
 		if err != nil {
 			t.Logf("Command output: %s", string(output))

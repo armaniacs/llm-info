@@ -39,7 +39,7 @@ func TestStandardCompatibilityE2E(t *testing.T) {
 		},
 		{
 			name:          "JSON output format",
-			args:          []string{"--url", apiURL, "--api-key", apiKey, "--output", "json"},
+			args:          []string{"--url", apiURL, "--api-key", apiKey, "--format", "json"},
 			expectSuccess: true,
 			expectedOutput: []string{
 				"[",

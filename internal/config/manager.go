@@ -246,12 +246,29 @@ func (m *Manager) applyCLIConfig(resolved *ResolvedConfig, cliArgs *CLIArgs) err
 
 	// ゲートウェイ設定
 	if cliArgs.URL != "" || cliArgs.APIKey != "" {
-		resolved.Gateway = &config.GatewayConfig{
-			URL:     cliArgs.URL,
-			APIKey:  cliArgs.APIKey,
-			Timeout: cliArgs.Timeout,
+		// 既存のゲートウェイ設定があれば保存してからマージ
+		if resolved.Gateway == nil {
+			resolved.Gateway = &config.GatewayConfig{}
 		}
-		resolved.Sources["gateway"] = SourceCLI
+
+		// ソースが既にENVである場合はマージを示す
+		if resolved.Sources["gateway"] == SourceEnv {
+			resolved.Sources["gateway"] = SourceCLI // CLIが優先
+		} else {
+			resolved.Sources["gateway"] = SourceCLI
+		}
+
+		if cliArgs.URL != "" {
+			resolved.Gateway.URL = cliArgs.URL
+		}
+
+		if cliArgs.APIKey != "" {
+			resolved.Gateway.APIKey = cliArgs.APIKey
+		}
+
+		if cliArgs.Timeout > 0 {
+			resolved.Gateway.Timeout = cliArgs.Timeout
+		}
 	} else if cliArgs.Gateway != "" {
 		// ゲートウェイ名が指定された場合は設定ファイルから取得
 		gatewayConfig, err := m.GetGatewayConfig(cliArgs.Gateway)

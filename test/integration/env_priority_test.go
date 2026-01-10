@@ -163,6 +163,7 @@ func TestConfigSourceInfo(t *testing.T) {
 
 	// ソース情報に環境変数が含まれていることを確認
 	if !contains(sourceInfo, "environment variable") {
+		t.Logf("Actual source info:\n%s", sourceInfo)
 		t.Error("Source info should contain 'environment variable'")
 	}
 
