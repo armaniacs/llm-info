@@ -2,7 +2,6 @@ package config
 
 import (
 	"fmt"
-	"net/url"
 	"os"
 	"strconv"
 	"strings"
@@ -14,6 +13,7 @@ type EnvConfig struct {
 	URL            string
 	APIKey         string
 	Timeout        time.Duration
+	TimeoutString  string // パース前の文字列を保持
 	DefaultGateway string
 	OutputFormat   string
 	SortBy         string
@@ -25,10 +25,12 @@ type EnvConfig struct {
 
 // LoadEnvConfig は環境変数から設定を読み込む
 func LoadEnvConfig() *EnvConfig {
+	timeoutStr := os.Getenv("LLM_INFO_TIMEOUT")
 	return &EnvConfig{
 		URL:            os.Getenv("LLM_INFO_URL"),
 		APIKey:         os.Getenv("LLM_INFO_API_KEY"),
-		Timeout:        parseTimeout(os.Getenv("LLM_INFO_TIMEOUT")),
+		Timeout:        parseTimeout(timeoutStr),
+		TimeoutString:  timeoutStr,
 		DefaultGateway: os.Getenv("LLM_INFO_DEFAULT_GATEWAY"),
 		OutputFormat:   os.Getenv("LLM_INFO_OUTPUT_FORMAT"),
 		SortBy:         os.Getenv("LLM_INFO_SORT_BY"),
@@ -45,6 +47,11 @@ func parseTimeout(s string) time.Duration {
 		return 0
 	}
 
+	// 負の値は不正
+	if strings.HasPrefix(s, "-") {
+		return 0
+	}
+
 	// 秒数を指定
 	if seconds, err := strconv.Atoi(s); err == nil {
 		return time.Duration(seconds) * time.Second
@@ -52,6 +59,10 @@ func parseTimeout(s string) time.Duration {
 
 	// duration形式を指定
 	if duration, err := time.ParseDuration(s); err == nil {
+		// パース成功でも負の値は不正
+		if duration < 0 {
+			return 0
+		}
 		return duration
 	}
 
@@ -74,16 +85,28 @@ func (e *EnvConfig) ToConfig() *Config {
 
 // Validate は環境変数設定を検証する
 func (e *EnvConfig) Validate() error {
+	// URL検証の改善
 	if e.URL != "" {
-		if _, err := url.Parse(e.URL); err != nil {
-			return fmt.Errorf("invalid LLM_INFO_URL: %w", err)
+		// より厳格なURL検証
+		if !isValidURL(e.URL) {
+			return fmt.Errorf("invalid LLM_INFO_URL: %q", e.URL)
 		}
 	}
 
-	if e.Timeout < 0 {
-		return fmt.Errorf("LLM_INFO_TIMEOUT must be positive")
+	// タイムアウト検証
+	if e.TimeoutString != "" {
+		// 値が設定されているがパースに失敗した場合
+		if e.Timeout == 0 && e.TimeoutString != "" && e.TimeoutString != "0" {
+			return fmt.Errorf("invalid LLM_INFO_TIMEOUT value: %q", e.TimeoutString)
+		}
 	}
 
+	// タイムアウト検証（パース後の値）
+	if e.Timeout < 0 {
+		return fmt.Errorf("LLM_INFO_TIMEOUT must be positive, got: %v", e.Timeout)
+	}
+
+	// 出力形式検証
 	if e.OutputFormat != "" {
 		validFormats := []string{"table", "json"}
 		if !contains(validFormats, e.OutputFormat) {
@@ -95,15 +118,6 @@ func (e *EnvConfig) Validate() error {
 	return nil
 }
 
-// contains はスライスに文字列が含まれているかチェックする
-func contains(slice []string, item string) bool {
-	for _, s := range slice {
-		if s == item {
-			return true
-		}
-	}
-	return false
-}
 
 // NewEnvConfig は新しい環境変数設定を作成します（後方互換性）
 func NewEnvConfig() *EnvConfig {

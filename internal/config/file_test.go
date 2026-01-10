@@ -175,8 +175,8 @@ func TestLoadLegacyConfigFromFile(t *testing.T) {
 		t.Errorf("Expected default gateway 'default', got '%s'", cfg.DefaultGateway)
 	}
 
-	if cfg.Common.Output.Format != "table" {
-		t.Errorf("Expected output format 'table', got '%s'", cfg.Common.Output.Format)
+	if cfg.Global.OutputFormat != "table" {
+		t.Errorf("Expected output format 'table', got '%s'", cfg.Global.OutputFormat)
 	}
 }
 

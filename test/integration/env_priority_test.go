@@ -132,9 +132,13 @@ func TestConfigPriority(t *testing.T) {
 func TestConfigSourceInfo(t *testing.T) {
 	// テスト用の環境変数を設定
 	os.Setenv("LLM_INFO_URL", "https://env.example.com")
+	os.Setenv("LLM_INFO_API_KEY", "env-api-key")
+	os.Setenv("LLM_INFO_TIMEOUT", "30s")
 	os.Setenv("LLM_INFO_OUTPUT_FORMAT", "json")
 	defer func() {
 		os.Unsetenv("LLM_INFO_URL")
+		os.Unsetenv("LLM_INFO_API_KEY")
+		os.Unsetenv("LLM_INFO_TIMEOUT")
 		os.Unsetenv("LLM_INFO_OUTPUT_FORMAT")
 	}()
 

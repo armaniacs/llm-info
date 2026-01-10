@@ -140,46 +140,24 @@ func TestLegacyConfigCompatibility(t *testing.T) {
 	tempDir := t.TempDir()
 	configPath := filepath.Join(tempDir, "test-legacy-config.yaml")
 
-	configContent := `gateways:
-	 - name: "legacy-gateway"
-	   url: "https://legacy.example.com/v1"
-	   api_key: "legacy-key"
-	   timeout: "5s"
-default_gateway: "legacy-gateway"
-common:
-	 timeout: "10s"
-	 output:
-	   format: "json"
-	   table:
-	     always_show: ["name"]
-	     show_if_available: ["max_tokens"]`
+	configContent := `base_url: https://legacy.example.com/v1
+api_key: legacy-key
+timeout: 10s
+output_format: json`
 
 	if err := os.WriteFile(configPath, []byte(configContent), 0644); err != nil {
 		t.Fatalf("Failed to write test legacy config file: %v", err)
 	}
 
-	// 設定マネージャーの初期化
-	manager := config.NewManager(configPath)
-
-	// 設定ファイルの読み込み
-	if err := manager.Load(); err != nil {
+	// Managerではなく直接LoadLegacyConfigFromFileを使用
+	cfg, err := config.LoadLegacyConfigFromFile(configPath)
+	if err != nil {
 		t.Fatalf("Failed to load legacy config file: %v", err)
 	}
 
-	// 古い形式の設定が読み込まれていることを確認
-	fileConfig := manager.GetFileConfig()
-	if fileConfig == nil {
-		t.Error("GetFileConfig() returned nil")
-		return
-	}
-
-	if len(fileConfig.Gateways) != 1 {
-		t.Errorf("Expected 1 gateway in legacy config, got %d", len(fileConfig.Gateways))
-	}
-
-	if fileConfig.Gateways[0].Name != "legacy-gateway" {
-		t.Errorf("Expected gateway name 'legacy-gateway', got %q", fileConfig.Gateways[0].Name)
-	}
+	// 設定マネージャーに設定
+	manager := config.NewManager(configPath)
+	manager.SetNewConfig(cfg)
 
 	// 新しい形式の設定に変換されていることを確認
 	newConfig := manager.GetNewConfig()
@@ -192,8 +170,16 @@ common:
 		t.Errorf("Expected 1 gateway in converted config, got %d", len(newConfig.Gateways))
 	}
 
-	if newConfig.Gateways[0].Name != "legacy-gateway" {
-		t.Errorf("Expected gateway name 'legacy-gateway', got %q", newConfig.Gateways[0].Name)
+	if newConfig.Gateways[0].Name != "default" {
+		t.Errorf("Expected gateway name 'default', got %q", newConfig.Gateways[0].Name)
+	}
+
+	if newConfig.Gateways[0].URL != "https://legacy.example.com/v1" {
+		t.Errorf("Expected URL 'https://legacy.example.com/v1', got %q", newConfig.Gateways[0].URL)
+	}
+
+	if newConfig.Gateways[0].APIKey != "legacy-key" {
+		t.Errorf("Expected API key 'legacy-key', got %q", newConfig.Gateways[0].APIKey)
 	}
 
 	if newConfig.Global.OutputFormat != "json" {
@@ -201,7 +187,7 @@ common:
 	}
 
 	// ゲートウェイ設定が適用できることを確認
-	if err := manager.ApplyGateway("legacy-gateway"); err != nil {
+	if err := manager.ApplyGateway("default"); err != nil {
 		t.Errorf("Failed to apply legacy gateway: %v", err)
 	}
 

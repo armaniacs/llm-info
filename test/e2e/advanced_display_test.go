@@ -8,14 +8,13 @@ import (
 )
 
 func TestAdvancedDisplayFeatures(t *testing.T) {
-	// ビルド済みバイナリのパス
-	binaryPath := "../../bin/llm-info"
-	if _, err := os.Stat(binaryPath); os.IsNotExist(err) {
-		t.Skip("Binary not found, skipping E2E tests")
-	}
+	// テスト環境のセットアップ
+	binaryPath := SetupTestEnvironment(t)
+	defer CleanTestEnvironment(t)
 
 	t.Run("filter by name", func(t *testing.T) {
-		cmd := exec.Command(binaryPath, "--url", "http://localhost:8080", "--api-key", "test-key", "--filter", "name:gpt")
+		cmd := exec.Command(binaryPath, "--url", "http://localhost:8080", "--api-key", "test-key", "--filter", "gpt")
+
 		output, err := cmd.CombinedOutput()
 		if err != nil {
 			t.Logf("Command output: %s", string(output))

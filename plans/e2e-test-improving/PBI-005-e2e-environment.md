@@ -372,3 +372,37 @@ E2Eテストのカバレッジを向上させるために：
    - テーブル出力の検証
    - JSON出力の検証
    - 色付けの検証
+## 実装記録
+
+### [2026-01-10 21:00:00]
+
+**実装者**: Claude Code
+
+**実装内容**:
+- `Makefile:75-91`: E2Eテスト用ターゲット（test-e2e-setup, test-e2e, test-e2e-clean, test-e2e-all）を追加
+- `test/e2e/test_helper.go`: 新規作成 - SetupTestEnvironment、CleanTestEnvironment等のヘルパー関数を実装
+- `test/e2e/advanced_display_test.go`: 新しいtest_helperを使用するように修正
+- `test/e2e/config_file_test.go`: 一部修正 - SetupTestEnvironmentを使用するように変更
+- `scripts/setup-e2e-tests.sh`: 新規作成 - E2Eテスト環境セットアップスクリプト
+- `test/e2e/README.md`: 新規作成 - E2Eテストの実行方法とトラブルシューティング
+
+**遭遇した問題と解決策**:
+- **問題**: test_helper.goでのビルドパスエラー（chdir test: no such file or directory）
+  **解決策**: プロジェクトルートを動的に取得してビルドコマンドを実行するように修正
+- **問題**: exec.CmdにTimeoutフィールドがない
+  **解決策**: Timeout対応は保留し、基本的なE2E環境改善に集中
+
+**テスト結果**:
+- E2Eテストがバイナリを見つけて実行することを確認
+- モックサーバーがない場合は適切にスキップされる
+- test-e2e-setupターゲットが正常に動作
+
+**受け入れ基準の達成状況**:
+- [x] すべてのE2Eテストが実行可能（モックサーバーがない場合はスキップ）
+- [x] 開発者が簡単にテストを実行できる（make test-e2e）
+- [x] バイナリパスの問題が大幅に改善
+- [ ] CI/CDが安定して実行される（未実施）
+- [x] テスト用ドキュメントを整備
+
+**備考**:
+PBI-005の主要目標であるE2Eテストの実行環境改善が達成されました。Makefileターゲットとテストヘルパーにより、開発者は簡単にE2Eテストを実行できるようになりました。モックサーバーのセットアップやCI/CD対応は将来の改善課題として残されています。

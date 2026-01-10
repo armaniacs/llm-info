@@ -1,4 +1,4 @@
-.PHONY: build test clean lint install uninstall run-example help
+.PHONY: build test clean lint install uninstall run-example help test-e2e test-e2e-setup test-e2e-clean test-e2e-all
 
 BINARY_NAME=llm-info
 BUILD_DIR=bin
@@ -68,6 +68,29 @@ run-example: build
 	@echo "Running example..."
 	$(BUILD_DIR)/$(BINARY_NAME) --url https://openrouter.ai/api
 
+# E2Eテストの準備
+test-e2e-setup:
+	@echo "Setting up E2E test environment..."
+	@mkdir -p test/bin
+	@go build -o test/bin/llm-info cmd/llm-info/*.go
+	@echo "E2E binary ready at test/bin/llm-info"
+
+# E2Eテストの実行
+test-e2e: test-e2e-setup
+	@echo "Running E2E tests..."
+	@LLM_INFO_BIN_PATH=$(PWD)/test/bin/llm-info go test ./test/e2e -v
+	@echo "E2E tests completed"
+
+# E2Eテストのクリーンアップ
+test-e2e-clean:
+	@echo "Cleaning E2E test environment..."
+	@rm -rf test/bin/
+	@echo "E2E test environment cleaned"
+
+# すべてのテストを含むE2Eテスト
+test-e2e-all: test test-e2e
+	@echo "All tests (unit + integration + e2e) completed"
+
 # ヘルプ表示
 help:
 	@echo "Available targets:"
@@ -79,6 +102,10 @@ help:
 	@echo "  install        - Install the binary to GOBIN or GOPATH/bin"
 	@echo "  uninstall      - Remove the installed binary"
 	@echo "  run-example    - Run with example gateway"
+	@echo "  test-e2e-setup - Setup E2E test environment"
+	@echo "  test-e2e       - Run E2E tests"
+	@echo "  test-e2e-clean - Clean E2E test environment"
+	@echo "  test-e2e-all   - Run all tests including E2E"
 	@echo "  help           - Show this help message"
 	@echo ""
 	@echo "Installation destination:"

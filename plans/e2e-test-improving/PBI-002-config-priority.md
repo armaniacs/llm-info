@@ -211,3 +211,36 @@ Configuration sources:
 - [ ] TestConfigValidation/invalid_URLがパス
 - [ ] 手動テストで部分的なCLI overrideが動作
 - [ ] ソース情報が正しく表示される
+## 実装記録
+
+### [2026-01-10 20:57:36]
+
+**実装者**: Claude Code
+
+**実装内容**:
+- `pkg/config/config.go:29-65`: ConfigSource型とGatewayConfigのソース追跡フィールドを追加
+- `internal/config/manager.go:143-439`: applyEnvConfig、applyCLIConfig、GetConfigSourceInfoを修正してフィールドレベルのソース追跡をサポート
+- `internal/config/validation.go`: 共有検証関数を作成し、設定検証ロジックを強化
+- `test/integration/env_priority_test.go:135,137`: TestConfigSourceInfoテストにTimeoutとAPIKeyの環境変数を追加
+
+**遭遇した問題と解決策**:
+- **問題**: 設定検証が失敗しなかった（特にinvalid timeoutのケース）
+  **解決策**: applyEnvConfigで無効な値でもソース情報を追跡するように修正（envConfig.TimeoutStringの有無をチェック）
+- **問題**: ConfigSource型のパッケージ参照エラー
+  **解決策**: internal/configから重複する定義を削除し、pkg/configの定義を使用するように修正
+
+**テスト結果**:
+- TestConfigPriority: ✅ 成功 - 特にpartial_CLI_overrideが正しく動作
+- TestConfigSourceInfo: ✅ 成功 - gateway.url、gateway.api_key、gateway.timeoutの個別ソース表示を確認
+- TestConfigValidation: ✅ 成功 - invalid timeout検証が正しく動作
+- TestEnvironmentVariableValidation: ✅ 成功 - invalid timeoutが正しくエラーを返す
+
+**受け入れ基準の達成状況**:
+- [x] TestConfigPriority/partial_CLI_overrideがパス
+- [x] TestConfigSourceInfoがパス
+- [x] TestConfigValidation/invalid_URLがパス
+- [x] 手動テストで部分的なCLI overrideが動作
+- [x] ソース情報が正しく表示される
+
+**備考**:
+設定の優先順位（CLI > 環境変数 > 設定ファイル > デフォルト）と部分的なCLIオーバーライド機能が正しく実装されました。各フィールド個別のソース追跡により、どの設定値がどこから来たのか正確に把握できるようになりました。

@@ -26,12 +26,42 @@ type Global struct {
 	SortBy       string        `yaml:"sort_by"`
 }
 
+// ConfigSource は設定ソースの種類を表す
+type ConfigSource int
+
+const (
+	SourceDefault ConfigSource = iota
+	SourceFile
+	SourceEnv
+	SourceCLI
+)
+
 // GatewayConfig は実行時に使用するゲートウェイ設定を表す
 type GatewayConfig struct {
 	Name    string        `yaml:"name"`
 	URL     string        `yaml:"url"`
 	APIKey  string        `yaml:"api_key"`
 	Timeout time.Duration `yaml:"timeout"`
+
+	// ソース追跡（JSON/YAML出力から除外）
+	URLSource     ConfigSource `json:"-" yaml:"-"`
+	APIKeySource  ConfigSource `json:"-" yaml:"-"`
+	TimeoutSource ConfigSource `json:"-" yaml:"-"`
+}
+
+// GetURLSource はURLの設定ソースを返す
+func (g *GatewayConfig) GetURLSource() ConfigSource {
+	return g.URLSource
+}
+
+// GetAPIKeySource はAPIKeyの設定ソースを返す
+func (g *GatewayConfig) GetAPIKeySource() ConfigSource {
+	return g.APIKeySource
+}
+
+// GetTimeoutSource はTimeoutの設定ソースを返す
+func (g *GatewayConfig) GetTimeoutSource() ConfigSource {
+	return g.TimeoutSource
 }
 
 // FileConfig は設定ファイルの構造体です（後方互換性のため）

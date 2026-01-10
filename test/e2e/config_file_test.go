@@ -9,8 +9,12 @@ import (
 )
 
 func TestConfigFileExecution(t *testing.T) {
+	// テスト環境のセットアップ
+	binaryPath := SetupTestEnvironment(t)
+	defer CleanTestEnvironment(t)
+
 	// テスト用の設定ファイルを作成
-	tempDir := t.TempDir()
+	tempDir := CreateTempDir(t)
 	configPath := filepath.Join(tempDir, "test-config.yaml")
 
 	configContent := `
@@ -30,14 +34,8 @@ global:
 		t.Fatalf("Failed to write test config file: %v", err)
 	}
 
-	// llm-infoバイナリのパスを取得
-	binPath := "../../llm-info"
-	if _, err := os.Stat(binPath); os.IsNotExist(err) {
-		t.Skip("llm-info binary not found, skipping E2E test")
-	}
-
 	// 設定ファイルを使用してコマンドを実行
-	cmd := exec.Command(binPath, "--config", configPath, "--help")
+	cmd := exec.Command(binaryPath, "-c", configPath, "--help")
 	output, err := cmd.CombinedOutput()
 	if err != nil {
 		t.Fatalf("Failed to run llm-info with config file: %v, output: %s", err, string(output))

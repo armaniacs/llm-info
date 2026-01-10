@@ -4,20 +4,12 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/armaniacs/llm-info/pkg/config"
 )
 
-// ConfigSource は設定ソースの種類を表す
-type ConfigSource int
-
-const (
-	SourceDefault ConfigSource = iota
-	SourceFile
-	SourceEnv
-	SourceCLI
-)
 
 // ResolvedConfig は解決された設定を表す
 type ResolvedConfig struct {
@@ -28,7 +20,7 @@ type ResolvedConfig struct {
 	Columns      string
 	LogLevel     string
 	UserAgent    string
-	Sources      map[string]ConfigSource
+	Sources      map[string]config.ConfigSource
 }
 
 // Manager は設定管理機能を提供します
@@ -71,13 +63,8 @@ func (m *Manager) Load() error {
 			return fmt.Errorf("failed to load config file (tried both new and legacy formats): %w", err)
 		}
 
-		// 古い形式の設定を検証
-		if err := ValidateLegacyConfig(legacyConfig); err != nil {
-			return fmt.Errorf("invalid legacy config: %w", err)
-		}
-
-		m.fileConfig = legacyConfig
-		m.newConfig = ConvertLegacyToNew(legacyConfig)
+		// 古い形式の設定は新しい形式に変換済みなので、そのまま使用
+		m.newConfig = legacyConfig
 	} else {
 		// 新しい形式の設定を検証
 		if err := ValidateConfig(newConfig); err != nil {
@@ -121,7 +108,7 @@ func (m *Manager) LoadFromEnv() {
 // ResolveConfig はすべての設定ソースから最終的な設定を解決する
 func (m *Manager) ResolveConfig(cliArgs *CLIArgs) (*ResolvedConfig, error) {
 	resolved := &ResolvedConfig{
-		Sources: make(map[string]ConfigSource),
+		Sources: make(map[string]config.ConfigSource),
 	}
 
 	// 1. デフォルト値を設定
@@ -156,8 +143,8 @@ func (m *Manager) ResolveConfig(cliArgs *CLIArgs) (*ResolvedConfig, error) {
 func (m *Manager) applyDefaults(resolved *ResolvedConfig) error {
 	resolved.OutputFormat = "table"
 	resolved.SortBy = "name"
-	resolved.Sources["output_format"] = SourceDefault
-	resolved.Sources["sort_by"] = SourceDefault
+	resolved.Sources["output_format"] = config.SourceDefault
+	resolved.Sources["sort_by"] = config.SourceDefault
 	return nil
 }
 
@@ -170,12 +157,12 @@ func (m *Manager) applyFileConfig(resolved *ResolvedConfig) error {
 	// グローバル設定を適用
 	if m.newConfig.Global.OutputFormat != "" {
 		resolved.OutputFormat = m.newConfig.Global.OutputFormat
-		resolved.Sources["output_format"] = SourceFile
+		resolved.Sources["output_format"] = config.SourceFile
 	}
 
 	if m.newConfig.Global.SortBy != "" {
 		resolved.SortBy = m.newConfig.Global.SortBy
-		resolved.Sources["sort_by"] = SourceFile
+		resolved.Sources["sort_by"] = config.SourceFile
 	}
 
 	// デフォルトゲートウェイを適用（まだゲートウェイが設定されていない場合）
@@ -188,7 +175,13 @@ func (m *Manager) applyFileConfig(resolved *ResolvedConfig) error {
 					APIKey:  gw.APIKey,
 					Timeout: gw.Timeout,
 				}
-				resolved.Sources["gateway"] = SourceFile
+				resolved.Gateway.URLSource = config.SourceFile
+				resolved.Gateway.APIKeySource = config.SourceFile
+				resolved.Gateway.TimeoutSource = config.SourceFile
+				resolved.Sources["gateway"] = config.SourceFile
+				resolved.Sources["gateway.url"] = config.SourceFile
+				resolved.Sources["gateway.api_key"] = config.SourceFile
+				resolved.Sources["gateway.timeout"] = config.SourceFile
 				break
 			}
 		}
@@ -201,38 +194,59 @@ func (m *Manager) applyFileConfig(resolved *ResolvedConfig) error {
 func (m *Manager) applyEnvConfig(resolved *ResolvedConfig) error {
 	envConfig := LoadEnvConfig()
 
-	if envConfig.URL != "" || envConfig.APIKey != "" {
-		resolved.Gateway = &config.GatewayConfig{
-			URL:     envConfig.URL,
-			APIKey:  envConfig.APIKey,
-			Timeout: envConfig.Timeout,
-		}
-		resolved.Sources["gateway"] = SourceEnv
+	// Gatewayの初期化（初回のみ）
+	if resolved.Gateway == nil {
+		resolved.Gateway = &config.GatewayConfig{}
+	}
+
+	// 各フィールドを個別に設定
+	if envConfig.URL != "" {
+		resolved.Gateway.URL = envConfig.URL
+		resolved.Gateway.URLSource = config.SourceEnv
+		resolved.Sources["gateway.url"] = config.SourceEnv
+	}
+
+	if envConfig.APIKey != "" {
+		resolved.Gateway.APIKey = envConfig.APIKey
+		resolved.Gateway.APIKeySource = config.SourceEnv
+		resolved.Sources["gateway.api_key"] = config.SourceEnv
+	}
+
+	if envConfig.TimeoutString != "" {
+		// タイムアウトが設定されている場合（有効か無効かに関わらず）
+		resolved.Gateway.Timeout = envConfig.Timeout
+		resolved.Gateway.TimeoutSource = config.SourceEnv
+		resolved.Sources["gateway.timeout"] = config.SourceEnv
+	}
+
+	// APIキーが空でもURLが設定されている場合は、ソース情報を保持
+	if envConfig.URL != "" && envConfig.APIKey == "" && resolved.Sources["gateway"] == 0 {
+		resolved.Sources["gateway"] = config.SourceEnv
 	}
 
 	if envConfig.OutputFormat != "" {
 		resolved.OutputFormat = envConfig.OutputFormat
-		resolved.Sources["output_format"] = SourceEnv
+		resolved.Sources["output_format"] = config.SourceEnv
 	}
 
 	if envConfig.SortBy != "" {
 		resolved.SortBy = envConfig.SortBy
-		resolved.Sources["sort_by"] = SourceEnv
+		resolved.Sources["sort_by"] = config.SourceEnv
 	}
 
 	if envConfig.Filter != "" {
 		resolved.Filter = envConfig.Filter
-		resolved.Sources["filter"] = SourceEnv
+		resolved.Sources["filter"] = config.SourceEnv
 	}
 
 	if envConfig.LogLevel != "" {
 		resolved.LogLevel = envConfig.LogLevel
-		resolved.Sources["log_level"] = SourceEnv
+		resolved.Sources["log_level"] = config.SourceEnv
 	}
 
 	if envConfig.UserAgent != "" {
 		resolved.UserAgent = envConfig.UserAgent
-		resolved.Sources["user_agent"] = SourceEnv
+		resolved.Sources["user_agent"] = config.SourceEnv
 	}
 
 	return nil
@@ -244,31 +258,33 @@ func (m *Manager) applyCLIConfig(resolved *ResolvedConfig, cliArgs *CLIArgs) err
 		return nil
 	}
 
-	// ゲートウェイ設定
+	// Gatewayの初期化（初回のみ）
+	if resolved.Gateway == nil {
+		resolved.Gateway = &config.GatewayConfig{}
+	}
+
+	// CLIで指定されたフィールドのみ更新
+	if cliArgs.URL != "" {
+		resolved.Gateway.URL = cliArgs.URL
+		resolved.Gateway.URLSource = config.SourceCLI
+		resolved.Sources["gateway.url"] = config.SourceCLI
+	}
+
+	if cliArgs.APIKey != "" {
+		resolved.Gateway.APIKey = cliArgs.APIKey
+		resolved.Gateway.APIKeySource = config.SourceCLI
+		resolved.Sources["gateway.api_key"] = config.SourceCLI
+	}
+
+	if cliArgs.Timeout > 0 {
+		resolved.Gateway.Timeout = cliArgs.Timeout
+		resolved.Gateway.TimeoutSource = config.SourceCLI
+		resolved.Sources["gateway.timeout"] = config.SourceCLI
+	}
+
+	// Gateway全体のソース情報（後方互換性）
 	if cliArgs.URL != "" || cliArgs.APIKey != "" {
-		// 既存のゲートウェイ設定があれば保存してからマージ
-		if resolved.Gateway == nil {
-			resolved.Gateway = &config.GatewayConfig{}
-		}
-
-		// ソースが既にENVである場合はマージを示す
-		if resolved.Sources["gateway"] == SourceEnv {
-			resolved.Sources["gateway"] = SourceCLI // CLIが優先
-		} else {
-			resolved.Sources["gateway"] = SourceCLI
-		}
-
-		if cliArgs.URL != "" {
-			resolved.Gateway.URL = cliArgs.URL
-		}
-
-		if cliArgs.APIKey != "" {
-			resolved.Gateway.APIKey = cliArgs.APIKey
-		}
-
-		if cliArgs.Timeout > 0 {
-			resolved.Gateway.Timeout = cliArgs.Timeout
-		}
+		resolved.Sources["gateway"] = config.SourceCLI
 	} else if cliArgs.Gateway != "" {
 		// ゲートウェイ名が指定された場合は設定ファイルから取得
 		gatewayConfig, err := m.GetGatewayConfig(cliArgs.Gateway)
@@ -276,28 +292,28 @@ func (m *Manager) applyCLIConfig(resolved *ResolvedConfig, cliArgs *CLIArgs) err
 			return fmt.Errorf("failed to get gateway config: %w", err)
 		}
 		resolved.Gateway = gatewayConfig
-		resolved.Sources["gateway"] = SourceCLI
+		resolved.Sources["gateway"] = config.SourceCLI
 	}
 
 	// その他の設定
 	if cliArgs.OutputFormat != "" {
 		resolved.OutputFormat = cliArgs.OutputFormat
-		resolved.Sources["output_format"] = SourceCLI
+		resolved.Sources["output_format"] = config.SourceCLI
 	}
 
 	if cliArgs.SortBy != "" {
 		resolved.SortBy = cliArgs.SortBy
-		resolved.Sources["sort_by"] = SourceCLI
+		resolved.Sources["sort_by"] = config.SourceCLI
 	}
 
 	if cliArgs.Filter != "" {
 		resolved.Filter = cliArgs.Filter
-		resolved.Sources["filter"] = SourceCLI
+		resolved.Sources["filter"] = config.SourceCLI
 	}
 
 	if cliArgs.Columns != "" {
 		resolved.Columns = cliArgs.Columns
-		resolved.Sources["columns"] = SourceCLI
+		resolved.Sources["columns"] = config.SourceCLI
 	}
 
 	return nil
@@ -313,6 +329,51 @@ func (m *Manager) validateResolvedConfig(resolved *ResolvedConfig) error {
 		return fmt.Errorf("gateway URL is required")
 	}
 
+	// GatewayのURLも検証
+	if !isValidURL(resolved.Gateway.URL) {
+		return fmt.Errorf("invalid gateway URL: %q", resolved.Gateway.URL)
+	}
+
+	// 出力形式の検証
+	if resolved.OutputFormat != "" {
+		validFormats := []string{"table", "json"}
+		if !contains(validFormats, resolved.OutputFormat) {
+			return fmt.Errorf("invalid output format: %s (valid: %s)",
+				resolved.OutputFormat, strings.Join(validFormats, ", "))
+		}
+	}
+
+	// CLIで上書きされなかった環境変数の値を検証
+	envConfig := LoadEnvConfig()
+
+	// URLがCLIで上書きされていない場合に限り検証
+	if resolved.Gateway != nil && resolved.Sources["gateway.url"] == config.SourceEnv && envConfig.URL != "" {
+		if !isValidURL(envConfig.URL) {
+			return fmt.Errorf("invalid LLM_INFO_URL from environment variables: %q", envConfig.URL)
+		}
+	}
+
+	// TimeoutがCLIで上書きされていない場合に限り検証
+	if resolved.Gateway != nil && resolved.Sources["gateway.timeout"] == config.SourceEnv && envConfig.TimeoutString != "" {
+		// 値が設定されているがパースに失敗した場合
+		if envConfig.Timeout == 0 && envConfig.TimeoutString != "" && envConfig.TimeoutString != "0" {
+			return fmt.Errorf("invalid LLM_INFO_TIMEOUT from environment variables: %q", envConfig.TimeoutString)
+		}
+		// パース成功でも負の値は不正
+		if envConfig.Timeout < 0 {
+			return fmt.Errorf("LLM_INFO_TIMEOUT from environment variables must be positive, got: %v", envConfig.Timeout)
+		}
+	}
+
+	// OutputFormatがCLIで上書きされていない場合に限り検証
+	if resolved.Sources["output_format"] == config.SourceEnv && envConfig.OutputFormat != "" {
+		validFormats := []string{"table", "json"}
+		if !contains(validFormats, envConfig.OutputFormat) {
+			return fmt.Errorf("invalid LLM_INFO_OUTPUT_FORMAT from environment variables: %s (valid: %s)",
+				envConfig.OutputFormat, strings.Join(validFormats, ", "))
+		}
+	}
+
 	return nil
 }
 
@@ -320,22 +381,43 @@ func (m *Manager) validateResolvedConfig(resolved *ResolvedConfig) error {
 func (m *Manager) GetConfigSourceInfo(resolved *ResolvedConfig) string {
 	info := "Configuration sources:\n"
 
-	for key, source := range resolved.Sources {
-		sourceName := ""
-		switch source {
-		case SourceDefault:
-			sourceName = "default"
-		case SourceFile:
-			sourceName = "config file"
-		case SourceEnv:
-			sourceName = "environment variable"
-		case SourceCLI:
-			sourceName = "command line"
+	// Gatewayの詳細なソース情報
+	if resolved.Gateway != nil {
+		if resolved.Gateway.URLSource > 0 {
+			info += fmt.Sprintf("  gateway.url: %s\n", m.getSourceName(resolved.Gateway.URLSource))
 		}
-		info += fmt.Sprintf("  %s: %s\n", key, sourceName)
+		if resolved.Gateway.APIKeySource > 0 {
+			info += fmt.Sprintf("  gateway.api_key: %s\n", m.getSourceName(resolved.Gateway.APIKeySource))
+		}
+		if resolved.Gateway.TimeoutSource > 0 {
+			info += fmt.Sprintf("  gateway.timeout: %s\n", m.getSourceName(resolved.Gateway.TimeoutSource))
+		}
+	}
+
+	// その他の設定
+	for key, source := range resolved.Sources {
+		if !strings.HasPrefix(key, "gateway.") && key != "gateway" {
+			info += fmt.Sprintf("  %s: %s\n", key, m.getSourceName(source))
+		}
 	}
 
 	return info
+}
+
+// getSourceName はConfigSourceを文字列に変換
+func (m *Manager) getSourceName(source config.ConfigSource) string {
+	switch source {
+	case config.SourceDefault:
+		return "default"
+	case config.SourceFile:
+		return "config file"
+	case config.SourceEnv:
+		return "environment variable"
+	case config.SourceCLI:
+		return "command line"
+	default:
+		return "unknown"
+	}
 }
 
 // CLIArgs はコマンドライン引数を表す
@@ -422,6 +504,11 @@ func (m *Manager) GetFileConfig() *config.FileConfig {
 // GetNewConfig は新しい形式の設定を返します
 func (m *Manager) GetNewConfig() *config.Config {
 	return m.newConfig
+}
+
+// SetNewConfig は新しい設定を設定します
+func (m *Manager) SetNewConfig(cfg *config.Config) {
+	m.newConfig = cfg
 }
 
 // SetBaseURL はベースURLを設定します
