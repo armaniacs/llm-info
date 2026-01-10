@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/your-org/llm-info/internal/model"
+	"github.com/armaniacs/llm-info/internal/model"
 )
 
 func TestRenderJSON(t *testing.T) {

@@ -3,7 +3,7 @@ package ui
 import (
 	"testing"
 
-	"github.com/your-org/llm-info/internal/model"
+	"github.com/armaniacs/llm-info/internal/model"
 )
 
 func TestSort(t *testing.T) {

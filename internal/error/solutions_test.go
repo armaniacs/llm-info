@@ -525,32 +525,32 @@ func TestSolutionProvider_GetHelpURL(t *testing.T) {
 		{
 			name:      "Network error",
 			errorType: ErrorTypeNetwork,
-			expected:  "https://github.com/your-org/llm-info/wiki/network-errors",
+			expected:  "https://github.com/armaniacs/llm-info/wiki/network-errors",
 		},
 		{
 			name:      "API error",
 			errorType: ErrorTypeAPI,
-			expected:  "https://github.com/your-org/llm-info/wiki/api-errors",
+			expected:  "https://github.com/armaniacs/llm-info/wiki/api-errors",
 		},
 		{
 			name:      "Config error",
 			errorType: ErrorTypeConfig,
-			expected:  "https://github.com/your-org/llm-info/wiki/config-errors",
+			expected:  "https://github.com/armaniacs/llm-info/wiki/config-errors",
 		},
 		{
 			name:      "User error",
 			errorType: ErrorTypeUser,
-			expected:  "https://github.com/your-org/llm-info/wiki/usage",
+			expected:  "https://github.com/armaniacs/llm-info/wiki/usage",
 		},
 		{
 			name:      "System error",
 			errorType: ErrorTypeSystem,
-			expected:  "https://github.com/your-org/llm-info/wiki/troubleshooting",
+			expected:  "https://github.com/armaniacs/llm-info/wiki/troubleshooting",
 		},
 		{
 			name:      "Unknown error",
 			errorType: ErrorTypeUnknown,
-			expected:  "https://github.com/your-org/llm-info/wiki/errors",
+			expected:  "https://github.com/armaniacs/llm-info/wiki/errors",
 		},
 	}
 

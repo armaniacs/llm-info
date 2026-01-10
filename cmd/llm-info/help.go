@@ -275,10 +275,10 @@ func (hp *HelpProvider) ShowErrorsHelp() {
   - ヘルプを参照する: llm-info --help
 
 詳細なヘルプ:
-  - ネットワークエラー: https://github.com/your-org/llm-info/wiki/network-errors
-  - APIエラー: https://github.com/your-org/llm-info/wiki/api-errors
-  - 設定エラー: https://github.com/your-org/llm-info/wiki/config-errors
-  - トラブルシューティング: https://github.com/your-org/llm-info/wiki/troubleshooting
+  - ネットワークエラー: https://github.com/armaniacs/llm-info/wiki/network-errors
+  - APIエラー: https://github.com/armaniacs/llm-info/wiki/api-errors
+  - 設定エラー: https://github.com/armaniacs/llm-info/wiki/config-errors
+  - トラブルシューティング: https://github.com/armaniacs/llm-info/wiki/troubleshooting
 
 デバッグ方法:
   # 詳細なログを表示
@@ -318,7 +318,7 @@ func (hp *HelpProvider) ShowVersion() {
 	fmt.Printf("llm-info version %s\n", hp.version)
 	fmt.Println("Copyright (c) 2024 llm-info contributors")
 	fmt.Println("License: MIT")
-	fmt.Println("Repository: https://github.com/your-org/llm-info")
+	fmt.Println("Repository: https://github.com/armaniacs/llm-info")
 }
 
 // ShowConfigTemplate は設定ファイルのテンプレートを表示する

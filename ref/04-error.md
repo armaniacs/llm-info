@@ -135,7 +135,7 @@ err := error.NewAppError(
   WithContext("url", gatewayURL).
   WithSolution("APIキーを確認してください").
   WithSolution("APIキーに必要な権限があることを確認してください").
-  WithHelpURL("https://github.com/your-org/llm-info/wiki/authentication")
+  WithHelpURL("https://github.com/armaniacs/llm-info/wiki/authentication")
 ```
 
 ### 便利な関数
@@ -345,7 +345,7 @@ func FormatErrorMessage(err *AppError) string
    2. タイムアウト値を増やしてみてください
    3. ゲートウェイが稼働していることを確認してください
 
-📖 詳細なヘルプ: https://github.com/your-org/llm-info/wiki/network-errors
+📖 詳細なヘルプ: https://github.com/armaniacs/llm-info/wiki/network-errors
 ```
 
 ## 解決策の定義
@@ -533,7 +533,7 @@ err.WithSolution("ネットワーク接続を確認してください").
 ### 4. ヘルプURLの提供
 
 ```go
-err.WithHelpURL("https://github.com/your-org/llm-info/wiki/network-errors")
+err.WithHelpURL("https://github.com/armaniacs/llm-info/wiki/network-errors")
 ```
 
 ## 関連ドキュメント

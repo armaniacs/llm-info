@@ -5,7 +5,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/your-org/llm-info/internal/model"
+	"github.com/armaniacs/llm-info/internal/model"
 )
 
 // SortField はソートフィールドを表す

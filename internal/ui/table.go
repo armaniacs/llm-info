@@ -5,7 +5,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/your-org/llm-info/internal/model"
+	"github.com/armaniacs/llm-info/internal/model"
 )
 
 // TableRenderer はテーブル表示機能を提供する

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"net/url"
 
-	"github.com/your-org/llm-info/pkg/config"
+	"github.com/armaniacs/llm-info/pkg/config"
 )
 
 // ValidateConfig は設定値を検証する

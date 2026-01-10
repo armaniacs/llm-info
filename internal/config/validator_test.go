@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/your-org/llm-info/pkg/config"
+	"github.com/armaniacs/llm-info/pkg/config"
 )
 
 func TestValidateConfig(t *testing.T) {

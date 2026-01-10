@@ -8,13 +8,13 @@ import (
 	"strings"
 	"time"
 
-	"github.com/your-org/llm-info/internal/api"
-	"github.com/your-org/llm-info/internal/config"
-	internalConfig "github.com/your-org/llm-info/internal/config"
-	errhandler "github.com/your-org/llm-info/internal/error"
-	"github.com/your-org/llm-info/internal/model"
-	"github.com/your-org/llm-info/internal/ui"
-	pkgconfig "github.com/your-org/llm-info/pkg/config"
+	"github.com/armaniacs/llm-info/internal/api"
+	"github.com/armaniacs/llm-info/internal/config"
+	internalConfig "github.com/armaniacs/llm-info/internal/config"
+	errhandler "github.com/armaniacs/llm-info/internal/error"
+	"github.com/armaniacs/llm-info/internal/model"
+	"github.com/armaniacs/llm-info/internal/ui"
+	pkgconfig "github.com/armaniacs/llm-info/pkg/config"
 )
 
 const version = "1.0.0"

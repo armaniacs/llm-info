@@ -1,4 +1,4 @@
-module github.com/your-org/llm-info
+module github.com/armaniacs/llm-info
 
 go 1.25.4
 

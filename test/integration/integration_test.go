@@ -7,10 +7,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/your-org/llm-info/internal/api"
-	"github.com/your-org/llm-info/internal/config"
-	"github.com/your-org/llm-info/internal/model"
-	"github.com/your-org/llm-info/internal/ui"
+	"github.com/armaniacs/llm-info/internal/api"
+	"github.com/armaniacs/llm-info/internal/config"
+	"github.com/armaniacs/llm-info/internal/model"
+	"github.com/armaniacs/llm-info/internal/ui"
 )
 
 func TestEndToEndFlow(t *testing.T) {

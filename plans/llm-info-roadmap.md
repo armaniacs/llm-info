@@ -258,7 +258,7 @@ git clone <repository-url>
 cd llm-info
 
 # Goモジュールの初期化
-go mod init github.com/your-org/llm-info
+go mod init github.com/armaniacs/llm-info
 
 # 依存関係のインストール
 go mod tidy

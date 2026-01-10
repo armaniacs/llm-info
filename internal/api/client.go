@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/your-org/llm-info/internal/config"
+	"github.com/armaniacs/llm-info/internal/config"
 )
 
 // Client はAPIクライアントです

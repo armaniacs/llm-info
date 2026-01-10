@@ -82,14 +82,14 @@ llm-info/
 
 - **3.2 ソースからビルド**
   ```bash
-  git clone https://github.com/your-org/llm-info.git
+  git clone https://github.com/armaniacs/llm-info.git
   cd llm-info
   make build
   ```
 
 - **3.3 Goインストール**（将来的に公開する場合）
   ```bash
-  go install github.com/your-org/llm-info/cmd/llm-info@latest
+  go install github.com/armaniacs/llm-info/cmd/llm-info@latest
   ```
 
 - **3.4 バイナリのインストール**（オプション）
@@ -180,7 +180,7 @@ llm-info/
 
 - **8.1 開発環境のセットアップ**
   ```bash
-  git clone https://github.com/your-org/llm-info.git
+  git clone https://github.com/armaniacs/llm-info.git
   cd llm-info
   go mod download
   ```

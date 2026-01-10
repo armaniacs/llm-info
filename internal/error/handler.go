@@ -204,7 +204,7 @@ func (h *Handler) Handle(err error) int {
 		appErr = NewAppError(ErrorTypeUnknown, SeverityError, "unexpected_error", "予期せぬエラーが発生しました").
 			WithCause(err).
 			WithSolution("開発者にエラーレポートを送信してください").
-			WithHelpURL("https://github.com/your-org/llm-info/issues")
+			WithHelpURL("https://github.com/armaniacs/llm-info/issues")
 	}
 
 	// エラーメッセージを表示
@@ -307,7 +307,7 @@ func (h *Handler) Recover() {
 		err := NewAppError(ErrorTypeSystem, SeverityFatal, "panic", "アプリケーションがクラッシュしました").
 			WithCause(fmt.Errorf("panic: %v", r)).
 			WithSolution("開発者にバグレポートを送信してください").
-			WithHelpURL("https://github.com/your-org/llm-info/issues")
+			WithHelpURL("https://github.com/armaniacs/llm-info/issues")
 
 		fmt.Printf("Panic recovered: %v\n", r)
 		debug.PrintStack()

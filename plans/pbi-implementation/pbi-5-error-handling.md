@@ -277,7 +277,7 @@ func CreateNetworkError(code string, url string, cause error) *AppError {
             WithSolution("ファイアウォール設定を確認してください")
     }
     
-    return err.WithHelpURL("https://github.com/your-org/llm-info/wiki/network-errors")
+    return err.WithHelpURL("https://github.com/armaniacs/llm-info/wiki/network-errors")
 }
 
 // CreateAPIError はAPIエラーを作成する
@@ -304,7 +304,7 @@ func CreateAPIError(code string, statusCode int, url string, cause error) *AppEr
             WithSolution("エンドポイントパスを確認してください")
     }
     
-    return err.WithHelpURL("https://github.com/your-org/llm-info/wiki/api-errors")
+    return err.WithHelpURL("https://github.com/armaniacs/llm-info/wiki/api-errors")
 }
 
 // CreateConfigError は設定エラーを作成する
@@ -323,13 +323,13 @@ func CreateConfigError(code string, configPath string, cause error) *AppError {
     case "invalid_config_format":
         err = err.WithSolution("YAML形式が正しいか確認してください").
             WithSolution("設定ファイルの構文を確認してください").
-            WithSolution("例: https://github.com/your-org/llm-info/blob/main/configs/example.yaml")
+            WithSolution("例: https://github.com/armaniacs/llm-info/blob/main/configs/example.yaml")
     case "missing_required_field":
         err = err.WithSolution("必須項目（url, api_keyなど）が設定されているか確認してください").
             WithSolution("設定ファイルのテンプレートを確認してください")
     }
     
-    return err.WithHelpURL("https://github.com/your-org/llm-info/wiki/config-errors")
+    return err.WithHelpURL("https://github.com/armaniacs/llm-info/wiki/config-errors")
 }
 
 // CreateUserError はユーザーエラーを作成する
@@ -357,7 +357,7 @@ func CreateUserError(code string, argument string, cause error) *AppError {
             WithSolution("利用可能なゲートウェイを確認してください: llm-info --list-gateways")
     }
     
-    return err.WithHelpURL("https://github.com/your-org/llm-info/wiki/usage")
+    return err.WithHelpURL("https://github.com/armaniacs/llm-info/wiki/usage")
 }
 ```
 
@@ -474,7 +474,7 @@ func (h *Handler) Handle(err error) int {
         appErr = NewAppError(ErrorTypeUnknown, SeverityError, "unexpected_error", "予期せぬエラーが発生しました").
             WithCause(err).
             WithSolution("開発者にエラーレポートを送信してください").
-            WithHelpURL("https://github.com/your-org/llm-info/issues")
+            WithHelpURL("https://github.com/armaniacs/llm-info/issues")
     }
     
     // エラーメッセージを表示
@@ -577,7 +577,7 @@ func (h *Handler) Recover() {
         err := NewAppError(ErrorTypeSystem, SeverityFatal, "panic", "アプリケーションがクラッシュしました").
             WithCause(fmt.Errorf("panic: %v", r)).
             WithSolution("開発者にバグレポートを送信してください").
-            WithHelpURL("https://github.com/your-org/llm-info/issues")
+            WithHelpURL("https://github.com/armaniacs/llm-info/issues")
         
         log.Printf("Panic recovered: %v\n", r)
         debug.PrintStack()
@@ -917,7 +917,7 @@ $ llm-info --url https://invalid-host
    2. ファイアウォール設定を確認してください
    3. ゲートウェイURLが正しいか確認してください
 
-📖 詳細なヘルプ: https://github.com/your-org/llm-info/wiki/network-errors
+📖 詳細なヘルプ: https://github.com/armaniacs/llm-info/wiki/network-errors
 ```
 
 #### ヘルプ機能の例

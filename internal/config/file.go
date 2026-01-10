@@ -5,7 +5,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/your-org/llm-info/pkg/config"
+	"github.com/armaniacs/llm-info/pkg/config"
 	"gopkg.in/yaml.v3"
 )
 

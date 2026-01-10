@@ -11,8 +11,8 @@ import (
 	"testing"
 	"time"
 
-	errhandler "github.com/your-org/llm-info/internal/error"
-	pkgconfig "github.com/your-org/llm-info/pkg/config"
+	errhandler "github.com/armaniacs/llm-info/internal/error"
+	pkgconfig "github.com/armaniacs/llm-info/pkg/config"
 )
 
 // TestErrorHandlingIntegration はエラーハンドリングの統合テスト
@@ -201,7 +201,7 @@ func TestConfigErrorHandling(t *testing.T) {
 			expectedSolutions: []string{
 				"YAML形式が正しいか確認してください",
 				"設定ファイルの構文を確認してください",
-				"例: https://github.com/your-org/llm-info/blob/main/configs/example.yaml",
+				"例: https://github.com/armaniacs/llm-info/blob/main/configs/example.yaml",
 			},
 		},
 	}
@@ -396,7 +396,7 @@ func TestErrorHandlingWithVerboseMode(t *testing.T) {
 		WithCause(originalErr).
 		WithContext("url", "https://api.example.com").
 		WithSolution("ネットワーク接続を確認してください").
-		WithHelpURL("https://github.com/your-org/llm-info/wiki/network-errors")
+		WithHelpURL("https://github.com/armaniacs/llm-info/wiki/network-errors")
 
 	// エラーを処理
 	exitCode := errorHandler.Handle(appErr)

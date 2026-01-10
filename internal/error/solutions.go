@@ -197,17 +197,17 @@ func (sp *SolutionProvider) GetContextualSolutions(err *AppError) []string {
 func (sp *SolutionProvider) GetHelpURL(errorType ErrorType) string {
 	switch errorType {
 	case ErrorTypeNetwork:
-		return "https://github.com/your-org/llm-info/wiki/network-errors"
+		return "https://github.com/armaniacs/llm-info/wiki/network-errors"
 	case ErrorTypeAPI:
-		return "https://github.com/your-org/llm-info/wiki/api-errors"
+		return "https://github.com/armaniacs/llm-info/wiki/api-errors"
 	case ErrorTypeConfig:
-		return "https://github.com/your-org/llm-info/wiki/config-errors"
+		return "https://github.com/armaniacs/llm-info/wiki/config-errors"
 	case ErrorTypeUser:
-		return "https://github.com/your-org/llm-info/wiki/usage"
+		return "https://github.com/armaniacs/llm-info/wiki/usage"
 	case ErrorTypeSystem:
-		return "https://github.com/your-org/llm-info/wiki/troubleshooting"
+		return "https://github.com/armaniacs/llm-info/wiki/troubleshooting"
 	default:
-		return "https://github.com/your-org/llm-info/wiki/errors"
+		return "https://github.com/armaniacs/llm-info/wiki/errors"
 	}
 }
 

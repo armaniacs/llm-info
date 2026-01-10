@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/your-org/llm-info/internal/model"
+	"github.com/armaniacs/llm-info/internal/model"
 )
 
 // JSONRenderer はJSON出力機能を提供する

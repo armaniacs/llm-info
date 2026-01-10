@@ -3,8 +3,8 @@ package integration
 import (
 	"testing"
 
-	"github.com/your-org/llm-info/internal/model"
-	"github.com/your-org/llm-info/internal/ui"
+	"github.com/armaniacs/llm-info/internal/model"
+	"github.com/armaniacs/llm-info/internal/ui"
 )
 
 func TestDisplayIntegration(t *testing.T) {

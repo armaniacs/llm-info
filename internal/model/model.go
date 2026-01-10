@@ -4,7 +4,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/your-org/llm-info/internal/api"
+	"github.com/armaniacs/llm-info/internal/api"
 )
 
 // Model はアプリケーション内のモデルデータです

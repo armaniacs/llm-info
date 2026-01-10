@@ -27,7 +27,7 @@
 
 ```bash
 # プロジェクトディレクトリで実行
-go mod init github.com/your-org/llm-info
+go mod init github.com/armaniacs/llm-info
 
 # 必要な依存関係を追加
 go get github.com/olekukonko/tablewriter
@@ -53,10 +53,10 @@ import (
 	"os"
 	"time"
 
-	"github.com/your-org/llm-info/internal/api"
-	"github.com/your-org/llm-info/internal/config"
-	"github.com/your-org/llm-info/internal/model"
-	"github.com/your-org/llm-info/internal/ui"
+	"github.com/armaniacs/llm-info/internal/api"
+	"github.com/armaniacs/llm-info/internal/config"
+	"github.com/armaniacs/llm-info/internal/model"
+	"github.com/armaniacs/llm-info/internal/ui"
 )
 
 func main() {
@@ -137,7 +137,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/your-org/llm-info/internal/config"
+	"github.com/armaniacs/llm-info/internal/config"
 )
 
 // Client はAPIクライアントです
@@ -228,7 +228,7 @@ type ModelInfo struct {
 package model
 
 import (
-	"github.com/your-org/llm-info/internal/api"
+	"github.com/armaniacs/llm-info/internal/api"
 )
 
 // Model はアプリケーション内のモデルデータです
@@ -267,7 +267,7 @@ import (
 	"strconv"
 
 	"github.com/olekukonko/tablewriter"
-	"github.com/your-org/llm-info/internal/model"
+	"github.com/armaniacs/llm-info/internal/model"
 )
 
 // RenderTable はモデル情報をテーブル形式で表示します
@@ -356,7 +356,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/your-org/llm-info/internal/config"
+	"github.com/armaniacs/llm-info/internal/config"
 )
 
 func TestClient_GetModelInfo(t *testing.T) {
@@ -438,7 +438,7 @@ package model
 import (
 	"testing"
 
-	"github.com/your-org/llm-info/internal/api"
+	"github.com/armaniacs/llm-info/internal/api"
 )
 
 func TestFromAPIResponse(t *testing.T) {
@@ -485,10 +485,10 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/your-org/llm-info/internal/api"
-	"github.com/your-org/llm-info/internal/config"
-	"github.com/your-org/llm-info/internal/model"
-	"github.com/your-org/llm-info/internal/ui"
+	"github.com/armaniacs/llm-info/internal/api"
+	"github.com/armaniacs/llm-info/internal/config"
+	"github.com/armaniacs/llm-info/internal/model"
+	"github.com/armaniacs/llm-info/internal/ui"
 )
 
 func TestEndToEndFlow(t *testing.T) {

@@ -6,8 +6,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/your-org/llm-info/internal/api"
-	"github.com/your-org/llm-info/internal/config"
+	"github.com/armaniacs/llm-info/internal/api"
+	"github.com/armaniacs/llm-info/internal/config"
 )
 
 func TestEndpointFallbackIntegration(t *testing.T) {

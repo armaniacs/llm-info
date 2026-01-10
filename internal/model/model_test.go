@@ -3,7 +3,7 @@ package model
 import (
 	"testing"
 
-	"github.com/your-org/llm-info/internal/api"
+	"github.com/armaniacs/llm-info/internal/api"
 )
 
 func TestFromAPIResponse(t *testing.T) {

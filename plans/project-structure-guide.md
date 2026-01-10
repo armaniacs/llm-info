@@ -110,9 +110,9 @@ package main
 import (
     "os"
     
-    "github.com/your-org/llm-info/internal/api"
-    "github.com/your-org/llm-info/internal/config"
-    "github.com/your-org/llm-info/internal/ui"
+    "github.com/armaniacs/llm-info/internal/api"
+    "github.com/armaniacs/llm-info/internal/config"
+    "github.com/armaniacs/llm-info/internal/ui"
 )
 
 func main() {
@@ -206,7 +206,7 @@ func main() {
 **使用例**:
 ```go
 // 他のプロジェクトからの使用
-import "github.com/your-org/llm-info/pkg/config"
+import "github.com/armaniacs/llm-info/pkg/config"
 
 cfg := config.NewDefault()
 ```

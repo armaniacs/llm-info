@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/your-org/llm-info/internal/config"
+	"github.com/armaniacs/llm-info/internal/config"
 )
 
 func TestConfigFileAndCommandLineIntegration(t *testing.T) {

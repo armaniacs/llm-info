@@ -82,7 +82,7 @@ func CreateNetworkError(code string, urlStr string, cause error) *AppError {
 			WithSolution("ファイアウォール設定を確認してください")
 	}
 
-	return err.WithHelpURL("https://github.com/your-org/llm-info/wiki/network-errors")
+	return err.WithHelpURL("https://github.com/armaniacs/llm-info/wiki/network-errors")
 }
 
 // CreateAPIError はAPIエラーを作成する
@@ -109,7 +109,7 @@ func CreateAPIError(code string, statusCode int, urlStr string, cause error) *Ap
 			WithSolution("エンドポイントパスを確認してください")
 	}
 
-	return err.WithHelpURL("https://github.com/your-org/llm-info/wiki/api-errors")
+	return err.WithHelpURL("https://github.com/armaniacs/llm-info/wiki/api-errors")
 }
 
 // CreateConfigError は設定エラーを作成する
@@ -128,13 +128,13 @@ func CreateConfigError(code string, configPath string, cause error) *AppError {
 	case "invalid_config_format":
 		err = err.WithSolution("YAML形式が正しいか確認してください").
 			WithSolution("設定ファイルの構文を確認してください").
-			WithSolution("例: https://github.com/your-org/llm-info/blob/main/configs/example.yaml")
+			WithSolution("例: https://github.com/armaniacs/llm-info/blob/main/configs/example.yaml")
 	case "missing_required_field":
 		err = err.WithSolution("必須項目（url, api_keyなど）が設定されているか確認してください").
 			WithSolution("設定ファイルのテンプレートを確認してください")
 	}
 
-	return err.WithHelpURL("https://github.com/your-org/llm-info/wiki/config-errors")
+	return err.WithHelpURL("https://github.com/armaniacs/llm-info/wiki/config-errors")
 }
 
 // CreateUserError はユーザーエラーを作成する
@@ -162,7 +162,7 @@ func CreateUserError(code string, argument string, cause error) *AppError {
 			WithSolution("利用可能なゲートウェイを確認してください: llm-info --list-gateways")
 	}
 
-	return err.WithHelpURL("https://github.com/your-org/llm-info/wiki/usage")
+	return err.WithHelpURL("https://github.com/armaniacs/llm-info/wiki/usage")
 }
 
 // CreateSystemError はシステムエラーを作成する
@@ -192,7 +192,7 @@ func CreateSystemError(code string, context string, cause error) *AppError {
 			WithSolution("最新バージョンにアップデートしてください")
 	}
 
-	return err.WithHelpURL("https://github.com/your-org/llm-info/issues")
+	return err.WithHelpURL("https://github.com/armaniacs/llm-info/issues")
 }
 
 // DetectErrorType はエラーメッセージからエラー種別を検出する

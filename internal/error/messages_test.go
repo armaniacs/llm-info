@@ -120,8 +120,8 @@ func TestCreateNetworkError(t *testing.T) {
 			if appErr.Context["url"] != url {
 				t.Errorf("CreateNetworkError() Context[url] = %v, want %v", appErr.Context["url"], url)
 			}
-			if appErr.HelpURL != "https://github.com/your-org/llm-info/wiki/network-errors" {
-				t.Errorf("CreateNetworkError() HelpURL = %v, want %v", appErr.HelpURL, "https://github.com/your-org/llm-info/wiki/network-errors")
+			if appErr.HelpURL != "https://github.com/armaniacs/llm-info/wiki/network-errors" {
+				t.Errorf("CreateNetworkError() HelpURL = %v, want %v", appErr.HelpURL, "https://github.com/armaniacs/llm-info/wiki/network-errors")
 			}
 		})
 	}
@@ -176,8 +176,8 @@ func TestCreateAPIError(t *testing.T) {
 			if appErr.Context["status_code"] != statusCode {
 				t.Errorf("CreateAPIError() Context[status_code] = %v, want %v", appErr.Context["status_code"], statusCode)
 			}
-			if appErr.HelpURL != "https://github.com/your-org/llm-info/wiki/api-errors" {
-				t.Errorf("CreateAPIError() HelpURL = %v, want %v", appErr.HelpURL, "https://github.com/your-org/llm-info/wiki/api-errors")
+			if appErr.HelpURL != "https://github.com/armaniacs/llm-info/wiki/api-errors" {
+				t.Errorf("CreateAPIError() HelpURL = %v, want %v", appErr.HelpURL, "https://github.com/armaniacs/llm-info/wiki/api-errors")
 			}
 		})
 	}
@@ -228,8 +228,8 @@ func TestCreateConfigError(t *testing.T) {
 			if appErr.Context["config_path"] != configPath {
 				t.Errorf("CreateConfigError() Context[config_path] = %v, want %v", appErr.Context["config_path"], configPath)
 			}
-			if appErr.HelpURL != "https://github.com/your-org/llm-info/wiki/config-errors" {
-				t.Errorf("CreateConfigError() HelpURL = %v, want %v", appErr.HelpURL, "https://github.com/your-org/llm-info/wiki/config-errors")
+			if appErr.HelpURL != "https://github.com/armaniacs/llm-info/wiki/config-errors" {
+				t.Errorf("CreateConfigError() HelpURL = %v, want %v", appErr.HelpURL, "https://github.com/armaniacs/llm-info/wiki/config-errors")
 			}
 		})
 	}
@@ -288,8 +288,8 @@ func TestCreateUserError(t *testing.T) {
 			if appErr.Context["argument"] != argument {
 				t.Errorf("CreateUserError() Context[argument] = %v, want %v", appErr.Context["argument"], argument)
 			}
-			if appErr.HelpURL != "https://github.com/your-org/llm-info/wiki/usage" {
-				t.Errorf("CreateUserError() HelpURL = %v, want %v", appErr.HelpURL, "https://github.com/your-org/llm-info/wiki/usage")
+			if appErr.HelpURL != "https://github.com/armaniacs/llm-info/wiki/usage" {
+				t.Errorf("CreateUserError() HelpURL = %v, want %v", appErr.HelpURL, "https://github.com/armaniacs/llm-info/wiki/usage")
 			}
 		})
 	}
@@ -345,8 +345,8 @@ func TestCreateSystemError(t *testing.T) {
 			if appErr.Context["context"] != context {
 				t.Errorf("CreateSystemError() Context[context] = %v, want %v", appErr.Context["context"], context)
 			}
-			if appErr.HelpURL != "https://github.com/your-org/llm-info/issues" {
-				t.Errorf("CreateSystemError() HelpURL = %v, want %v", appErr.HelpURL, "https://github.com/your-org/llm-info/issues")
+			if appErr.HelpURL != "https://github.com/armaniacs/llm-info/issues" {
+				t.Errorf("CreateSystemError() HelpURL = %v, want %v", appErr.HelpURL, "https://github.com/armaniacs/llm-info/issues")
 			}
 		})
 	}

@@ -133,7 +133,7 @@ llm-info/
 **技術的詳細**:
 ```bash
 # プロジェクト初期化
-go mod init github.com/your-org/llm-info
+go mod init github.com/armaniacs/llm-info
 
 # 依存関係追加
 go get github.com/olekukonko/tablewriter
@@ -142,7 +142,7 @@ go get github.com/olekukonko/tablewriter
 **Goモジュール構成**:
 ```go
 // go.mod
-module github.com/your-org/llm-info
+module github.com/armaniacs/llm-info
 
 go 1.21
 

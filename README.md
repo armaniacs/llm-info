@@ -1,6 +1,9 @@
 # llm-info
 
-LLMゲートウェイからモデル情報を取得して表示するCLIツールです。LiteLLM互換の`/model/info`エンドポイントとOpenAI標準の`/v1/models`エンドポイントをサポートしています。
+LLMゲートウェイからモデル情報を取得して表示するCLIツールです。
+OpenAI標準の`/v1/models`エンドポイントをサポートしています。
+
+LiteLLM互換の`/model/info`エンドポイントについては、実際のテストを行っていません。
 
 ## 機能
 
@@ -22,7 +25,7 @@ LLMゲートウェイからモデル情報を取得して表示するCLIツー�
 
 ```bash
 # リポジトリをクローン
-git clone https://github.com/your-org/llm-info.git
+git clone https://github.com/armaniacs/llm-info.git
 cd llm-info
 
 # ビルド
@@ -35,7 +38,7 @@ make install
 ### Goインストール
 
 ```bash
-go install github.com/your-org/llm-info/cmd/llm-info@latest
+go install github.com/armaniacs/llm-info/cmd/llm-info@latest
 ```
 
 ## 使用方法

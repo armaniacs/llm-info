@@ -28,7 +28,7 @@ make build
 
 ```bash
 # リポジトリをクローン
-git clone https://github.com/your-org/llm-info.git
+git clone https://github.com/armaniacs/llm-info.git
 cd llm-info
 
 # ビルド
@@ -38,7 +38,7 @@ make build
 ### Goインストール
 
 ```bash
-go install github.com/your-org/llm-info/cmd/llm-info@latest
+go install github.com/armaniacs/llm-info/cmd/llm-info@latest
 ```
 
 ### バイナリのインストール
@@ -426,7 +426,7 @@ llm-info --url https://api.example.com/v1 --output json | jq 'length'
 ### 開発環境のセットアップ
 
 ```bash
-git clone https://github.com/your-org/llm-info.git
+git clone https://github.com/armaniacs/llm-info.git
 cd llm-info
 go mod download
 ```

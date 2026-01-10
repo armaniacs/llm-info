@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/your-org/llm-info/pkg/config"
+	"github.com/armaniacs/llm-info/pkg/config"
 )
 
 // ConfigSource は設定ソースの種類を表す
