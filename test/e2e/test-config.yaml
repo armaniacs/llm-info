@@ -1,0 +1,4 @@
+gateways:
+  - name: "test"
+    url: "http://localhost:8080"
+    api_key: "test-key"

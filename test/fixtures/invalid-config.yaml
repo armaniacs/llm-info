@@ -1,0 +1,4 @@
+invalid yaml content:
+  - missing proper indentation
+  - unclosed quotes: "
+  - invalid syntax: [unclosed bracket

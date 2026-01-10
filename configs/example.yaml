@@ -1,0 +1,41 @@
+# LLM Info 設定ファイル例
+# このファイルを ~/.config/llm-info/llm-info.yaml にコピーして使用してください
+
+gateways:
+  # デフォルトゲートウェイ
+  - name: "default"
+    url: "https://api.example.com"
+    api_key: "your-api-key-here"
+    timeout: "10s"
+  
+  # 開発用ゲートウェイ
+  - name: "development"
+    url: "https://dev-api.example.com"
+    api_key: "dev-api-key"
+    timeout: "5s"
+  
+  # ステージング用ゲートウェイ
+  - name: "staging"
+    url: "https://staging-api.example.com"
+    api_key: "staging-api-key"
+    timeout: "15s"
+  
+  # ローカルゲートウェイ
+  - name: "local"
+    url: "http://localhost:8000"
+    api_key: ""
+    timeout: "5s"
+
+# デフォルトで使用するゲートウェイ名
+default_gateway: "default"
+
+# グローバル設定
+global:
+  # デフォルトのタイムアウト（各ゲートウェイで指定されていない場合に使用）
+  timeout: "10s"
+  
+  # デフォルトの出力形式 (table, json)
+  output_format: "table"
+  
+  # デフォルトのソート項目 (name, max_tokens, mode, input_cost)
+  sort_by: "name"
