@@ -203,14 +203,43 @@ llm-info
 
 ## 成功条件
 
-- [ ] TestConfigValidation/invalid_URLがパス
-- [ ] TestEnvironmentVariableValidation/invalid_timeoutがパス
-- [ ] TestEnvironmentVariableValidation/invalid_output_formatがパス
-- [ ] エラーメッセージが理解しやすい
-- [ ] 有効な設定値が正しく受け入れられる
+- [x] TestConfigValidation/invalid_URLがパス
+- [x] TestEnvironmentVariableValidation/invalid_timeoutがパス
+- [x] TestEnvironmentVariableValidation/invalid_output_formatがパス
+- [x] エラーメッセージが理解しやすい
+- [x] 有効な設定値が正しく受け入れられる
 
 ## 備考
 
 - 検証は厳格にしすぎるとユーザビリティが低下する可能性
 - エラーメッセージでは具体的な修正案を提示
 - 開発時には検証を緩和するオプションを検討（DEBUGモード等）
+## 実装記録
+
+### [2026-01-10 20:30:00]
+
+**実装者**: Claude Code
+
+**実装内容**:
+- `internal/config/validation.go`: 新規作成 - isValidURL(), contains() 共有検証関数を実装
+- `internal/config/env.go`: EnvConfigにTimeoutStringフィールドを追加、Validate()メソッドを改善
+- `internal/config/manager.go`: validateResolvedConfigを強化し、出力形式検証を追加
+
+**主な改善点**:
+1. URL検証の厳格化
+   - "//"スキームなしURLを拒否
+   - スペース、タブ、改行を含むURLを拒否
+   - HTTP/HTTPSのみ許可
+   - ホスト名の存在をチェック
+
+2. タイムアウト検証の改善
+   - 無効な文字列（"invalid"など）を検出
+   - 負の値を拒否
+   - パース失敗時のエラーを改善
+
+3. ソース追跡の修正
+   - CLIで上書きされていない場合のみ環境変数を検証
+   - 無効な値でもソース情報を追跡して検証できるように修正
+
+**備考**:
+設定検証ロジックが大幅に改善され、無効な値を適切に検出できるようになりました。エラーメッセージも具体的で理解しやすくなっています。

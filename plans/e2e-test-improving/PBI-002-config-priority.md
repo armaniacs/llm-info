@@ -206,11 +206,11 @@ Configuration sources:
 
 ## 成功条件
 
-- [ ] TestConfigPriority/partial_CLI_overrideがパス
-- [ ] TestConfigSourceInfoがパス
-- [ ] TestConfigValidation/invalid_URLがパス
-- [ ] 手動テストで部分的なCLI overrideが動作
-- [ ] ソース情報が正しく表示される
+- [x] TestConfigPriority/partial_CLI_overrideがパス
+- [x] TestConfigSourceInfoがパス
+- [x] TestConfigValidation/invalid_URLがパス
+- [x] 手動テストで部分的なCLI overrideが動作
+- [x] ソース情報が正しく表示される
 ## 実装記録
 
 ### [2026-01-10 20:57:36]
