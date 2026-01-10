@@ -12,9 +12,9 @@ func TestEnvConfig_Load(t *testing.T) {
 		"LLM_INFO_URL":           "https://test.example.com/v1",
 		"LLM_INFO_API_KEY":       "test-api-key",
 		"LLM_INFO_TIMEOUT":       "15s",
-		"LLM_INFO_GATEWAY":       "test-gateway",
+		"LLM_INFO_DEFAULT_GATEWAY": "test-gateway",
 		"LLM_INFO_OUTPUT_FORMAT": "json",
-		"LLM_INFO_CONFIG_FILE":   "/path/to/config.yaml",
+		"LLM_INFO_CONFIG_PATH":   "/path/to/config.yaml",
 	}
 
 	// テスト前に環境変数を保存
@@ -370,7 +370,7 @@ func TestEnvConfig_ValidateNew(t *testing.T) {
 		},
 		{
 			name:    "invalid URL",
-			envVars: map[string]string{"LLM_INFO_URL": "invalid-url"},
+			envVars: map[string]string{"LLM_INFO_URL": "ht tp://invalid url with spaces"},
 			wantErr: true,
 		},
 		{

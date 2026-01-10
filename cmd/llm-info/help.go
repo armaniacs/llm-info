@@ -45,7 +45,7 @@ func (hp *HelpProvider) ShowGeneralHelp() {
 	fmt.Fprintln(w, "  --list-gateways\t登録済みゲートウェイを一覧表示")
 	w.Flush()
 
-	fmt.Println(`
+	fmt.Print(`
 使用例:
   # 基本使用
   llm-info --url https://api.example.com --api-key your-key
@@ -66,11 +66,12 @@ func (hp *HelpProvider) ShowGeneralHelp() {
   llm-info --help examples  # 使用例のヘルプ
   llm-info --help errors    # エラーメッセージのヘルプ
 `)
+	fmt.Println()
 }
 
 // ShowFilterHelp はフィルタ構文のヘルプを表示する
 func (hp *HelpProvider) ShowFilterHelp() {
-	fmt.Println(`フィルタ構文ヘルプ
+	fmt.Print(`フィルタ構文ヘルプ
 
 基本構文:
   --filter "条件1,条件2,..."
@@ -96,11 +97,12 @@ func (hp *HelpProvider) ShowFilterHelp() {
   - 大文字小文字は区別されません
   - ワイルドカード(*)は使用できません
 `)
+	fmt.Println()
 }
 
 // ShowSortHelp はソートオプションのヘルプを表示する
 func (hp *HelpProvider) ShowSortHelp() {
-	fmt.Println(`ソートオプションヘルプ
+	fmt.Print(`ソートオプションヘルプ
 
 基本構文:
   --sort "フィールド"        # 昇順
@@ -122,11 +124,12 @@ func (hp *HelpProvider) ShowSortHelp() {
   - デフォルトは昇順です
   - 複数のフィールドでのソートはできません
 `)
+	fmt.Println()
 }
 
 // ShowConfigHelp は設定ファイルのヘルプを表示する
 func (hp *HelpProvider) ShowConfigHelp() {
-	fmt.Println(`設定ファイルヘルプ
+	fmt.Print(`設定ファイルヘルプ
 
 設定ファイルの場所:
   ~/.config/llm-info/llm-info.yaml
@@ -166,11 +169,12 @@ func (hp *HelpProvider) ShowConfigHelp() {
   3. 設定ファイル
   4. デフォルト値
 `)
+	fmt.Println()
 }
 
 // ShowExamplesHelp は使用例のヘルプを表示する
 func (hp *HelpProvider) ShowExamplesHelp() {
-	fmt.Println(`使用例ヘルプ
+	fmt.Print(`使用例ヘルプ
 
 基本使用例:
   # 直接指定
@@ -238,11 +242,12 @@ CI/CDでの使用例:
   # タイムアウトを延長
   llm-info --timeout 30s
 `)
+	fmt.Println()
 }
 
 // ShowErrorsHelp はエラーメッセージのヘルプを表示する
 func (hp *HelpProvider) ShowErrorsHelp() {
-	fmt.Println(`エラーメッセージヘルプ
+	fmt.Print(`エラーメッセージヘルプ
 
 エラーの種類:
   1. ネットワークエラー
@@ -290,6 +295,7 @@ func (hp *HelpProvider) ShowErrorsHelp() {
   # バージョン情報を表示
   llm-info --version
 `)
+	fmt.Println()
 }
 
 // ShowTopicHelp はトピック別のヘルプを表示する
@@ -323,7 +329,7 @@ func (hp *HelpProvider) ShowVersion() {
 
 // ShowConfigTemplate は設定ファイルのテンプレートを表示する
 func (hp *HelpProvider) ShowConfigTemplate() {
-	fmt.Println(`# llm-info 設定ファイルテンプレート
+	fmt.Print(`# llm-info 設定ファイルテンプレート
 # このファイルを ~/.config/llm-info/llm-info.yaml に保存してください
 
 # ゲートウェイ設定
@@ -375,4 +381,5 @@ global:
 # export LLM_INFO_CONFIG_PATH="/path/to/config.yaml"
 # export LLM_INFO_DEBUG="true"
 `)
+	fmt.Println()
 }

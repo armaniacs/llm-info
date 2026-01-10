@@ -41,6 +41,12 @@ make install
 go install github.com/armaniacs/llm-info/cmd/llm-info@latest
 ```
 
+**インストール先について**:
+- `GOBIN` 環境変数が設定されている場合: `$GOBIN/llm-info`
+- `GOBIN` が未設定の場合: `$HOME/go/bin/llm-info`
+
+`go env GOBIN` でインストール先を確認できます。PATHを適切に設定してください。
+
 ## 使用方法
 
 詳細な使用方法については、[USAGE.md](USAGE.md)を参照してください。
