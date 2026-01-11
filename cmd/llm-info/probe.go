@@ -10,6 +10,7 @@ import (
 	"github.com/armaniacs/llm-info/internal/api"
 	internalConfig "github.com/armaniacs/llm-info/internal/config"
 	"github.com/armaniacs/llm-info/internal/probe"
+	"github.com/armaniacs/llm-info/internal/ui"
 	"github.com/armaniacs/llm-info/pkg/config"
 )
 
@@ -187,8 +188,16 @@ func probeContextCommand(args []string) error {
 		return fmt.Errorf("failed to probe context window: %w", err)
 	}
 
-	// 結果を表示
-	fmt.Println(result.String())
+	// テーブル形式で出力
+	formatter := ui.NewTableFormatter()
+	output := formatter.FormatContextWindowResult(result)
+	fmt.Println(output)
+
+	// verbose時は履歴も表示
+	if *verbose && len(result.TrialHistory) > 0 {
+		history := formatter.FormatVerboseHistory(result.TrialHistory)
+		fmt.Println(history)
+	}
 
 	return nil
 }
@@ -282,8 +291,16 @@ func probeMaxOutputCommand(args []string) error {
 		return fmt.Errorf("failed to probe max output tokens: %w", err)
 	}
 
-	// 結果を表示
-	fmt.Println(result.String())
+	// テーブル形式で出力
+	formatter := ui.NewTableFormatter()
+	output := formatter.FormatMaxOutputResult(result)
+	fmt.Println(output)
+
+	// verbose時は履歴も表示
+	if *verbose && len(result.TrialHistory) > 0 {
+		history := formatter.FormatVerboseHistory(result.TrialHistory)
+		fmt.Println(history)
+	}
 
 	return nil
 }

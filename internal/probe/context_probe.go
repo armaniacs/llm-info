@@ -44,7 +44,8 @@ func (p *ContextWindowProbe) Probe(model string, verbose bool) (*ContextWindowRe
 			MethodConfidence: "low",
 			Trials:           upperLimit.Trials,
 			Duration:        time.Since(startTime),
-			Error:            upperLimit.ErrorMessage,
+			ErrorMessage:    upperLimit.ErrorMessage,
+			Success:          false,
 		}, nil
 	}
 
@@ -55,8 +56,9 @@ func (p *ContextWindowProbe) Probe(model string, verbose bool) (*ContextWindowRe
 			MethodConfidence: p.searcher.CalculateConfidence(upperLimit.Trials, upperLimit.Source, tokenLimit),
 			Trials:           upperLimit.Trials,
 			Duration:        time.Since(startTime),
-			Error:            upperLimit.ErrorMessage,
-			Source:            "validation_error",
+			ErrorMessage:    upperLimit.ErrorMessage,
+			Source:          "validation_error",
+			Success:         true,
 		}, nil
 	}
 
@@ -162,21 +164,31 @@ func (p *ContextWindowProbe) testWithTokenCount(model string, tokens int, verbos
 	}, nil
 }
 
+// TrialInfo は試行情報
+type TrialInfo struct {
+	TokenCount int
+	Success    bool
+	Message    string
+}
+
 // ContextWindowResult は探索結果を表す
 type ContextWindowResult struct {
-	Model           string
-	MaxContextTokens int    // *実際の*最大コンテキストトークン数
-	MethodConfidence string    // high/medium/low
-	Trials          int            // 試行した試行回数
-	Duration        time.Duration   // 実行時間
-	Error           string            // エラー情報（あれば）
-	Source          string            // 情報ソース
+	Model             string
+	MaxContextTokens  int    // *実際の*最大コンテキストトークン数
+	MethodConfidence  string // high/medium/low
+	Trials            int    // 試行した試行回数
+	Duration          time.Duration
+	MaxInputAtSuccess int    // 最後に成功した入力トークン数
+	Success           bool   // 成功フラグ
+	ErrorMessage      string // エラー情報（あれば）
+	Source            string // 情報ソース
+	TrialHistory      []TrialInfo // 試行履歴
 }
 
 // String は結果を文字列として返す
 func (r *ContextWindowResult) String() string {
-	if r.Error != "" {
-		return fmt.Sprintf("Error probing: %s", r.Error)
+	if r.ErrorMessage != "" {
+		return fmt.Sprintf("Error probing: %s", r.ErrorMessage)
 	}
 
 	return fmt.Sprintf(

@@ -50,8 +50,9 @@ func (p *MaxOutputTokensProbe) ProbeOutputTokens(model string, verbose bool) (*M
 			MethodConfidence:  "low",
 			Trials:            upperLimit.Trials,
 			Duration:          time.Since(startTime),
-			Error:             upperLimit.ErrorMessage,
+			ErrorMessage:      upperLimit.ErrorMessage,
 			InputTokensUsed:   inputTokens,
+			Success:           false,
 		}, nil
 	}
 
@@ -63,9 +64,10 @@ func (p *MaxOutputTokensProbe) ProbeOutputTokens(model string, verbose bool) (*M
 			MethodConfidence:  p.searcher.CalculateConfidence(upperLimit.Trials, "validation_error", tokenLimit),
 			Trials:            upperLimit.Trials,
 			Duration:          time.Since(startTime),
-			Error:             upperLimit.ErrorMessage,
+			ErrorMessage:      upperLimit.ErrorMessage,
 			InputTokensUsed:   inputTokens,
 			Evidence:          "validation_error",
+			Success:           true,
 		}, nil
 	}
 
@@ -239,16 +241,18 @@ type MaxOutputResult struct {
 	MethodConfidence        string // high/medium/low
 	Trials                  int    // 試行回数
 	Duration                time.Duration
-	Error                   string
+	ErrorMessage            string // エラー情報（あれば）
 	InputTokensUsed         int    // 使用した入力トークン数
-	Evidence                 string // "validation_error" or "max_output_incomplete" or "success"
+	Evidence                string // "validation_error" or "max_output_incomplete" or "success"
 	MaxSuccessfullyGenerated int    // 実際に生成できた最大トークン数
+	Success                 bool   // 成功フラグ
+	TrialHistory            []TrialInfo // 試行履歴
 }
 
 // String は結果を文字列として返す
 func (r *MaxOutputResult) String() string {
-	if r.Error != "" {
-		return fmt.Sprintf("Error probing: %s", r.Error)
+	if r.ErrorMessage != "" {
+		return fmt.Sprintf("Error probing: %s", r.ErrorMessage)
 	}
 
 	return fmt.Sprintf(
