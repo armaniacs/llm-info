@@ -225,6 +225,142 @@ llm-info --help
 llm-info --version
 ```
 
+## モデル制約値の探索
+
+llm-info v2.0では、実際のAPI動作をテストしてモデルの制約値を探索する機能が追加されました。
+
+### Context Windowの探索
+
+モデルが受け入れ可能な最大コンテキストトークン数を探索します。
+
+```bash
+# 基本的な使用方法
+llm-info probe-context --model gpt-4o
+
+# カスタムゲートウェイを使用
+llm-info probe-context --model claude-3-opus --gateway production
+
+# 詳細なログを表示
+llm-info probe-context --model gpt-4o --verbose
+
+# タイムアウトを延長
+llm-info probe-context --model gpt-4o --timeout 60s
+
+# 実行計画のみ表示（API呼び出しなし）
+llm-info probe-context --model gpt-4o --dry-run
+```
+
+出力例：
+```
+Context Window Probe Results
+============================
+Model:                 GLM-4.6
+Estimated Context:     127,000 tokens
+Method Confidence:     high
+Trials:                12
+Duration:              45.3s
+Max Input at Success:  126,800 tokens
+
+Status: ✓ Success
+```
+
+verboseモードの場合、探索履歴も表示されます。
+```
+Search History:
+------------------------------------------------------------
+Trial    Tokens          Result       Message
+------------------------------------------------------------
+1        1,000           ✓            Success
+2        10,000          ✗            Context length exceeded
+3        127,000         ✗            Context length exceeded
+4        126,800         ✓            Success at boundary
+```
+
+### Max Output Tokensの探索
+
+モデルが生成可能な最大出力トークン数を探索します。
+
+```bash
+# 基本的な使用方法
+llm-info probe-max-output --model gpt-4o
+
+# カスタムゲートウェイを使用
+llm-info probe-max-output --model claude-3-opus --url https://api.example.com
+
+# 詳細なログを表示
+llm-info probe-max-output --model gpt-4o --verbose --api-key your-key
+
+# 実行計画のみ表示
+llm-info probe-max-output --model gpt-4o --dry-run
+```
+
+出力例：
+```
+Max Output Tokens Probe Results
+================================
+Model:                 GLM-4.6
+Max Output Tokens:     16,384
+Evidence:              validation_error
+Trials:                8
+Duration:              30.2s
+Max Successfully Gen:  8,192 tokens
+
+Status: ✓ Success
+```
+
+### 探索コマンドのオプション
+
+| オプション | 説明 |
+|-----------|------|
+| `--model` | 対象モデルID（必須） |
+| `--url` | LLMゲートウェイのベースURL |
+| `--api-key` | 認証用APIキー |
+| `--gateway` | 設定ファイルのゲートウェイ名 |
+| `--timeout` | リクエストタイムアウト（デフォルト: 30s） |
+| `--config` | 設定ファイルのパス |
+| `--verbose` | 詳細な探索履歴を表示 |
+| `--dry-run` | 実行計画の表示のみ（API呼び出しなし） |
+| `--help` | コマンド固有のヘルプを表示 |
+
+## 探索機能の活用例
+
+### 1. 新しいモデルの制約値調査
+
+新しいLLMモデルを使用する前に、その実際の制約値を把握できます。
+
+```bash
+# モデルのコンテキスト制限を確認
+llm-info probe-context --model new-model-2024 --verbose
+
+# 出力生成の制限を確認
+llm-info probe-max-output --model new-model-2024 --verbose
+```
+
+### 2. ゲートウェイの動作検証
+
+ゲートウェイがドキュメント通りに動作しているか検証できます。
+
+```bash
+# 開発環境ゲートウェイのテスト
+llm-info probe-context --model gpt-4o --gateway development --verbose
+
+# 本番環境ゲートウェイのテスト
+llm-info probe-context --model gpt-4o --gateway production --verbose
+```
+
+### 3. CI/CDでのリグレッション検出
+
+CI/CDパイプラインでモデル制約値の変更を検出できます。
+
+```yaml
+# GitHub Actionsの例
+- name: Check model constraints
+  run: |
+    llm-info probe-context --model gpt-4o --gateway staging > context.txt
+    llm-info probe-max-output --model gpt-4o --gateway staging > output.txt
+    # 期待値との比較処理を追加
+```
+
 ## 出力の見方
 
 ### テーブル列の説明
@@ -484,12 +620,33 @@ A: はい、`LLM_INFO_URL`、`LLM_INFO_API_KEY` などの環境変数に対応�
 
 A: 現在はプロキシ対応していません。将来の機能で対応予定です。
 
+## 探索結果の理解
+
+### ステータス表示
+
+- `✓ Success`: 探索が正常完了
+- `✗ Failed`: 探索が失敗
+
+### 確信度（Method Confidence）
+
+- `high`: エラーメッセージから正確な値を取得
+- `medium`: 二分探索で境界を特定
+- `low`: 上限が見つからず、推定値
+
+### エビデンス（Evidence - Max Output）
+
+- `validation_error`: バリデーションエラーメッセージから検出
+- `max_output_incomplete`: 出力が途中で途切れた場合に検出
+- `success`: 設定された値で正常に生成完了
+
 ## コマンドリファレンス
 
 ### 基本構文
 
 ```bash
 llm-info [オプション]
+llm-info probe-context --model <MODEL_ID> [オプション]
+llm-info probe-max-output --model <MODEL_ID> [オプション]
 ```
 
 ### オプション

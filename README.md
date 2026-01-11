@@ -18,6 +18,10 @@ LiteLLM互換の`/model/info`エンドポイントについては、実際のテ
 - APIキー認証に対応
 - タイムアウト設定可能
 - 詳細なエラーメッセージと解決策の提示
+- **v2.0新機能**: モデル制約値の探索機能
+  - Context Window探索（最大入力トークン数）
+  - Max Output Tokens探索（最大出力トークン数）
+  - 見やすいテーブル形式での結果表示
 
 ## インストール
 
@@ -87,6 +91,22 @@ llm-info
 
 ```bash
 llm-info --url https://gateway.example.com/v1 --timeout 30s
+```
+
+### v2.0: モデル制約値の探索
+
+```bash
+# Context Windowの探索
+llm-info probe-context --model gpt-4o
+
+# Max Output Tokensの探索
+llm-info probe-max-output --model gpt-4o
+
+# 詳細な探索履歴を表示
+llm-info probe-context --model gpt-4o --verbose
+
+# カスタムゲートウェイで探索
+llm-info probe-max-output --model claude-3-opus --gateway production
 ```
 
 ### ヘルプを表示
@@ -358,15 +378,15 @@ make test-coverage
 
 ## リリース
 
-### v1.0.0 (MVP)
+### v2.0.0 (Latest)
 
-- [x] LiteLLM互換の`/model/info`エンドポイントからモデル情報を取得
-- [x] モデル情報をテーブル形式で表示
-- [x] コマンドライン引数でベースURLとAPIキーを指定
-- [x] タイムアウト処理
-- [x] シンプルで分かりやすいエラーメッセージ
-- [x] Go言語のシングルバイナリとしてビルド
-- [x] 基本的なテストカバレッジ
+- [x] **モデル制約値探索機能**
+  - [x] Context Window探索（probe-contextコマンド）
+  - [x] Max Output Tokens探索（probe-max-outputコマンド）
+  - [x] テーブル形式での結果出力
+  - [x] 詳細な探索履歴表示（verboseモード）
+  - [x] 数値の3桁区切り表示
+  - [x] ステータスインジケーター（✓/✗）
 
 ### v1.1.0 (Phase 2)
 
@@ -377,10 +397,21 @@ make test-coverage
 - [x] 複数ゲートウェイ対応
 - [x] 高いテストカバレッジ（80%以上）
 
+### v1.0.0 (MVP)
+
+- [x] LiteLLM互換の`/model/info`エンドポイントからモデル情報を取得
+- [x] モデル情報をテーブル形式で表示
+- [x] コマンドライン引数でベースURLとAPIキーを指定
+- [x] タイムアウト処理
+- [x] シンプルで分かりやすいエラーメッセージ
+- [x] Go言語のシングルバイナリとしてビルド
+- [x] 基本的なテストカバレッジ
+
 ## 将来の機能
 
 - 追加出力形式（CSV）
 - モデル比較機能
 - コスト計算ツール
 - キャッシュ機能
-- フィルタリングとソート機能
+- JSON出力形式での探索結果
+- 探索結果のキャッシュと比較
