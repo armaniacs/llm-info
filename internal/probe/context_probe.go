@@ -140,13 +140,24 @@ func (p *ContextWindowProbe) testWithTokenCount(model string, tokens int, verbos
 		}, nil
 	}
 
-	// 成功した場合
+	// 成功した場合 - Usageフィールドのnilチェック
+	if response.Usage == nil {
+		return &BoundarySearchResult{
+			Value:           0,
+			Success:         false,
+			ErrorMessage:    "Response missing usage information",
+			Source:          "api_error",
+			Trials:          1,
+			EstimatedTokens: 0,
+		}, nil
+	}
+
 	return &BoundarySearchResult{
-		Value:        response.Usage.PromptTokens,
-		Success:      true,
-	ErrorMessage: "",
-		Source:        "success",
-		Trials:        1,
+		Value:           response.Usage.PromptTokens,
+		Success:         true,
+		ErrorMessage:    "",
+		Source:          "success",
+		Trials:          1,
 		EstimatedTokens: response.Usage.TotalTokens,
 	}, nil
 }

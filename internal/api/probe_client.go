@@ -101,10 +101,15 @@ func (pc *ProbeClient) ProbeModel(modelID string) (*ProbeResponse, error) {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	// HTTPリクエストを作成
+	// HTTPリクエストを作成（タイムアウト付き）
 	url := fmt.Sprintf("%s/v1/chat/completions", pc.config.BaseURL)
+
+	// タイムアウト付きContextを作成
+	ctx, cancel := context.WithTimeout(context.Background(), pc.config.Timeout)
+	defer cancel()
+
 	httpReq, err := http.NewRequestWithContext(
-		context.Background(),
+		ctx,  // タイムアウト付きContextを使用
 		"POST",
 		url,
 		bytes.NewBuffer(jsonBody),
