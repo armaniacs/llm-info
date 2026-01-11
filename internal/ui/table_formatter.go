@@ -20,6 +20,58 @@ func NewTableFormatter() *TableFormatter {
 	}
 }
 
+// FormatIntegratedResult は統合探索結果を整形する
+func (tf *TableFormatter) FormatIntegratedResult(model string, contextResult *probe.ContextWindowResult, outputResult *probe.MaxOutputResult, duration time.Duration, trials int) string {
+	var sb strings.Builder
+
+	// ヘッダー
+	sb.WriteString("Model Constraints Probe Results\n")
+	sb.WriteString(strings.Repeat("=", 31) + "\n")
+
+	// データ行
+	sb.WriteString(fmt.Sprintf("%-22s %s\n", "Model:", model))
+
+	if contextResult != nil {
+		sb.WriteString(fmt.Sprintf("%-22s %s tokens\n", "Context Window:", formatNumber(contextResult.MaxContextTokens)))
+		sb.WriteString(fmt.Sprintf("%-22s %s\n", "Context Confidence:", contextResult.MethodConfidence))
+	} else {
+		sb.WriteString(fmt.Sprintf("%-22s %s\n", "Context Window:", "Failed"))
+		sb.WriteString(fmt.Sprintf("%-22s %s\n", "Context Confidence:", "-"))
+	}
+
+	if outputResult != nil {
+		sb.WriteString(fmt.Sprintf("%-22s %s tokens\n", "Max Output Tokens:", formatNumber(outputResult.MaxOutputTokens)))
+		sb.WriteString(fmt.Sprintf("%-22s %s\n", "Output Confidence:", outputResult.MethodConfidence))
+	} else {
+		sb.WriteString(fmt.Sprintf("%-22s %s\n", "Max Output Tokens:", "Failed"))
+		sb.WriteString(fmt.Sprintf("%-22s %s\n", "Output Confidence:", "-"))
+	}
+
+	sb.WriteString(fmt.Sprintf("%-22s %d\n", "Total Trials:", trials))
+	sb.WriteString(fmt.Sprintf("%-22s %s\n", "Total Duration:", formatDuration(duration)))
+
+	sb.WriteString("\n")
+
+	// ステータス
+	successCount := 0
+	if contextResult != nil && contextResult.Success {
+		successCount++
+	}
+	if outputResult != nil && outputResult.Success {
+		successCount++
+	}
+
+	if successCount == 2 {
+		sb.WriteString("Status: ✓ All probes succeeded\n")
+	} else if successCount == 1 {
+		sb.WriteString("Status: ⚠ Partial success\n")
+	} else {
+		sb.WriteString("Status: ✗ All probes failed\n")
+	}
+
+	return sb.String()
+}
+
 // FormatContextWindowResult はContext Window探索結果を整形
 func (tf *TableFormatter) FormatContextWindowResult(result *probe.ContextWindowResult) string {
 	var sb strings.Builder

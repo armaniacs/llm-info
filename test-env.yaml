@@ -1,0 +1,24 @@
+gateways:
+  - name: "test"
+    url: "https://api.openai.com/v1"
+    api_key: "${OPENAI_API_KEY}"
+    timeout: 30s
+
+default_gateway: "test"
+default_model: "gpt-3.5-turbo"
+
+global:
+  timeout: 30s
+  output_format: table
+  sort_by: name
+
+probe:
+  log:
+    enabled: true
+    dir: "/tmp/test-logs"
+    format: "json"
+    include_history: true
+  result:
+    enabled: true
+    dir: "/tmp/test-results"
+    overwrite: false
