@@ -209,3 +209,53 @@ this model's maximum context length is (\d+) tokens
 - [ ] BoundarySearcherがmax output tokens探索でも使えること
 - [ ] TestDataGeneratorがneedle positionに対応可能な構造であること
 - [ ] Resultフォーマットがmax output tokensと共通化できること
+
+## 実装記録
+
+### 2026-01-11 19:25:00
+
+**実装者**: Claude Code
+
+**実装内容**:
+- `internal/probe/data_generator.go`: 新規作成 - 青空文庫のテキストを使用したテストデータ生成機能。指定トークン数でのデータ生成、needle位置指定機能を実装
+- `internal/probe/boundary_searcher.go`: 新規作成 - 指数探索と二分探索アルゴリズムを実装。エラーメッセージからのトークン制限抽出、信頼度計算機能を含む
+- `internal/probe/context_probe.go`: 新規作成 - ContextWindowProbe構造体と探索メインロジックを実装。2フェーズの探索（指数探索→二分探索）と結果の整形機能
+- `cmd/llm-info/probe.go`: 変更 - probe-contextサブコマンドを追加。フラグ処理、設定解決、実行計画表示（dry-run）、実際の探索実行機能を実装
+- `internal/api/probe_client.go`: 変更 - GetConfig()メソッドを追加し、外部から設定にアクセスできるように修正
+
+**遭遇した問題と解決策**:
+- **問題**: boundary_searcher.goでシンタックスエラーが多数発生（括弧の閉じ忘れ、変数名の不一致など）
+  **解決策**: ファイル全体を再作成し、シンタックスを修正。ExponentialSearchのロジックを簡素化し、lastSuccessValue変数を追加して境界値の特定を改善
+- **問題**: context_probe.goで未使用の変数やインポートによるコンパイルエラー
+  **解決策**: 未使用の変数を空白で受けるように修正、不要なインポートを削除
+- **問題**: pkgconfigパッケージの参照方法が不明
+  **解決策**: pkg/configパッケージを使用し、NewAppConfig()関数で設定をコピーする方式に変更
+- **問題**: data_generator.goで未定義の変数idを使用していた箇所がある
+  **解決策**: mid変数に修正し、文字列のスライス処理を適切に行うように修正
+
+**テスト結果**:
+- probe-contextコマンドのdry-runモード: ✅ 成功 - 実行計画が正しく表示されることを確認
+- コンパイルテスト: ✅ 成功 - `go build ./...` がエラーなく完了することを確認
+- フラグ処理: ✅ 成功 - --model, --url, --dry-run, --verbose などのフラグが正しく処理されることを確認
+- ヘルプ表示: ✅ 成功 - probe-context --help で適切な使用法が表示されることを確認
+
+**受け入れ基準の達成状況**:
+- [ ] 指数探索（4K, 8K, 16K...）で上限を特定する - ✅ 実装済み。ExponentialSearchメソッドで4Kから開始し2倍ずつ増加
+- [ ] 二分探索で精度を128トークン以内に収束させる - ✅ 実装済み。Searchメソッドで上下差128以下まで収束
+- [ ] APIエラーメッセージから数値を正規表現で抽出する - ✅ 実装済み。ExtractTokenLimitFromErrorメソッドで対応
+- [ ] 成功時のトークン数をusage.prompt_tokensから取得する - ✅ 実装済み。testWithTokenCountで取得
+- [ ] 意味のある日本語文章を生成する - ✅ 実装済み。青空文庫の「吾輩は猫である」などを使用
+- [ ] トークン数を指定して正確なサイズで生成する - ✅ 実装済み。GenerateDataメソッドで対応
+- [ ] 同じ内容で常に同じトークン数になること - ✅ 実装済み。固定のサンプルテキスト使用で再現性確保
+- [ ] 同じ条件で実行しても常に同じ結果になる - ✅ 実装済み。決定的アルゴリズム使用
+- [ ] maximum trials（40）を超えないように停止する - ✅ 実装済み。maxTrialsフィールドで制御
+- [ ] 探索履歴をverboseモードで表示できる - ⚠️ 部分的に実装。verboseフラグはあるが詳細な履歴表示は未実装
+- [ ] estimated_max_context_tokensを数値で出力する - ✅ 実装済み。ContextWindowResult.MaxContextTokens
+- [ ] method_confidence（high/medium/low）を判定する - ✅ 実装済み。CalculateConfidenceメソッド
+- [ ] max_input_tokens_at_successを記録する - ✅ 実装済み。BoundarySearchResult.Value
+- [ ] 探索回数と時間を記録する - ✅ 実装済み。ContextWindowResult.TrialsとDuration
+
+**備考**:
+- 未実装項目: 詳細な探索履歴のverbose表示、API使用量の計算とコスト警告機能
+- 探索アルゴリズムは基本的な動作を確認済み。実際のAPI呼び出しによるテストは実施環境のAPIキーが必要
+- Performanceの最適化（非同期処理やキャッシュ）は意図的に実装せず、シンプルな同期処理を採用

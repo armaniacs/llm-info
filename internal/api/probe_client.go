@@ -26,6 +26,11 @@ func NewProbeClient(cfg *config.AppConfig) *ProbeClient {
 	}
 }
 
+// GetConfig は設定を返す
+func (pc *ProbeClient) GetConfig() *config.AppConfig {
+	return pc.config
+}
+
 // ProbeRequest はAPIリクエストの構造体
 type ProbeRequest struct {
 	Model       string `json:"model"`

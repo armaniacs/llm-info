@@ -151,6 +151,31 @@ go test ./test/integration/... -v
 make test-coverage
 ```
 
+### テスト環境の設定
+
+PBI実装時や機能テストを実行する際は、必ず `test/env/llm-info.yaml` 設定ファイルを使用してください：
+
+```bash
+# テスト環境設定を使用
+llm-info [command] --config test/env/llm-info.yaml
+```
+
+**重要**: テスト時は必ず `test/env/llm-info.yaml` に設定された以下の値を使用してください：
+- `default_gateway`: テスト用に設定されたゲートウェイ
+- `default_model`: テスト用に設定されたモデル
+
+このルールはPBIを実装・テストする際にも適用されます：
+- 例
+  - `plans/v2_0-rp/PBI-2-0-001-master.md`
+  - `plans/v2_0-rp/PBI-2-0-002-spike-api-connection.md`
+  - `plans/v2_0-rp/PBI-2-0-003-context-window-probe.md`
+  - `plans/v2_0-rp/PBI-2-0-004-max-output-probe.md`
+
+**理由**:
+- 本番環境のAPIキーやエンドポイントを誤って使用しないため
+- テスト結果の一貫性を保つため
+- コスト管理のためにテスト専用環境を利用するため
+
 ## ビルド
 
 ```bash
