@@ -19,7 +19,22 @@ import (
 
 const version = "1.0.0"
 
+// subcommands 利用可能なサブコマンドのマップ
+var subcommands = make(map[string]func([]string) error)
+
 func main() {
+	// サブコマンドチェック
+	if len(os.Args) > 1 {
+		if cmd, exists := subcommands[os.Args[1]]; exists {
+			// サブコマンドを実行
+			if err := cmd(os.Args[2:]); err != nil {
+				fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+				os.Exit(1)
+			}
+			return
+		}
+	}
+
 	// エラーハンドラーの初期化
 	verbose := os.Getenv("LLM_INFO_DEBUG") != "" || os.Getenv("LLM_INFO_VERBOSE") != ""
 	errorHandler := errhandler.NewHandler(verbose)
