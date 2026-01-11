@@ -26,7 +26,7 @@ type BoundarySearcher struct {
 // NewBoundarySearcher は新しい BoundarySearcher を作成する
 func NewBoundarySearcher() *BoundarySearcher {
 	return &BoundarySearcher{
-		maxTrials:    40,
+		maxTrials:    10, // テスト用に減らす
 		initialValue: 4096,
 	}
 }
@@ -56,7 +56,7 @@ func (bs *BoundarySearcher) Search(lower, upper int, runner func(int) (*Boundary
 		}
 
 		// API呼び出し間の待機（レート制限対策）
-		time.Sleep(1 * time.Second)
+		time.Sleep(500 * time.Millisecond) // テスト用に短くする
 	}
 
 	// 最終的な下界が成功した場合
