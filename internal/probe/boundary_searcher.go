@@ -7,6 +7,19 @@ import (
 	"time"
 )
 
+// VerboseLogger defines the interface for verbose logging callbacks
+type VerboseLogger interface {
+	LogInfo(message string)
+	LogProgress(current, total, tokens int)
+	LogSuccess(trial, tokens int, duration time.Duration)
+	LogFailure(trial, tokens int, reason string)
+	LogAPIRequest(method, url string, tokens int, temperature float64)
+	LogAPIResponse(status, promptTokens, completionTokens int, duration time.Duration)
+	LogSearchStrategy(strategy, reason string, details map[string]any)
+	LogError(err error, context string)
+	LogCompletion(strategy string, finalEstimate, tolerance int)
+}
+
 // BoundarySearchResult は探索結果を表す
 type BoundarySearchResult struct {
 	Value           int
@@ -21,6 +34,7 @@ type BoundarySearchResult struct {
 type BoundarySearcher struct {
 	maxTrials    int
 	initialValue int
+	verbose      VerboseLogger
 }
 
 // NewBoundarySearcher は新しい BoundarySearcher を作成する
@@ -31,22 +45,54 @@ func NewBoundarySearcher() *BoundarySearcher {
 	}
 }
 
+// SetVerboseLogger sets the verbose logger for real-time output
+func (bs *BoundarySearcher) SetVerboseLogger(verbose VerboseLogger) {
+	bs.verbose = verbose
+}
+
 // Search は下界と上界を指定して境界値を探す
 func (bs *BoundarySearcher) Search(lower, upper int, runner func(int) (*BoundarySearchResult, error)) (*BoundarySearchResult, error) {
 	lowerBound := lower
 	upperBound := upper
 	trials := 0
 
+	if bs.verbose != nil {
+		bs.verbose.LogInfo("Starting binary search...")
+		bs.verbose.LogSearchStrategy("Binary Search", "Refining bounds", map[string]any{
+			"lower": lowerBound,
+			"upper": upperBound,
+			"precision": 128,
+		})
+	}
+
 	// 二分探索の実行
 	for upperBound-lowerBound > 128 && trials < bs.maxTrials {
 		mid := (lowerBound + upperBound) / 2
+
+		if bs.verbose != nil {
+			bs.verbose.LogProgress(trials+1, bs.maxTrials, mid)
+		}
+
+		start := time.Now()
 		result, err := runner(mid)
+		duration := time.Since(start)
 
 		if err != nil {
+			if bs.verbose != nil {
+				bs.verbose.LogError(err, "Binary search trial failed")
+			}
 			return nil, err
 		}
 
 		trials++
+
+		if bs.verbose != nil {
+			if result.Success {
+				bs.verbose.LogSuccess(trials, mid, duration)
+			} else {
+				bs.verbose.LogFailure(trials, mid, result.ErrorMessage)
+			}
+		}
 
 		// 成功/失敗に応じて境界を更新
 		if result.Success {
@@ -65,6 +111,10 @@ func (bs *BoundarySearcher) Search(lower, upper int, runner func(int) (*Boundary
 		return nil, err
 	}
 
+	if bs.verbose != nil {
+		bs.verbose.LogCompletion("Binary Search", lowerBound, 128)
+	}
+
 	return &BoundarySearchResult{
 		Value:           lowerBound,
 		Success:         successResult.Success,
@@ -81,11 +131,28 @@ func (bs *BoundarySearcher) ExponentialSearch(runner func(int) (*BoundarySearchR
 	trials := 0
 	var lastSuccessValue int
 
+	if bs.verbose != nil {
+		bs.verbose.LogInfo("Starting exponential search...")
+		bs.verbose.LogSearchStrategy("Exponential Search", "Finding upper bound", map[string]any{
+			"initial": value,
+			"strategy": "double on success",
+		})
+	}
+
 	// 成功するまで2倍ずつ増やしていく
 	for trials < bs.maxTrials {
+		if bs.verbose != nil {
+			bs.verbose.LogProgress(trials+1, bs.maxTrials, value)
+		}
+
+		start := time.Now()
 		result, err := runner(value)
+		duration := time.Since(start)
 
 		if err != nil {
+			if bs.verbose != nil {
+				bs.verbose.LogError(err, "Exponential search trial failed")
+			}
 			return &BoundarySearchResult{
 				Value:           value,
 				Success:         false,
@@ -98,11 +165,22 @@ func (bs *BoundarySearcher) ExponentialSearch(runner func(int) (*BoundarySearchR
 
 		trials++
 
+		if bs.verbose != nil {
+			if result.Success {
+				bs.verbose.LogSuccess(trials, value, duration)
+			} else {
+				bs.verbose.LogFailure(trials, value, result.ErrorMessage)
+			}
+		}
+
 		if result.Success {
 			lastSuccessValue = value
 			// 成功した場合、さらに次の値で試して失敗した場合の境界を特定
 			nextValue := value * 2
 			if nextResult, nextErr := runner(nextValue); nextErr == nil && !nextResult.Success {
+				if bs.verbose != nil {
+					bs.verbose.LogCompletion("Exponential Search", value, value)
+				}
 				return &BoundarySearchResult{
 					Value:           value,
 					Success:         true,
@@ -119,6 +197,9 @@ func (bs *BoundarySearcher) ExponentialSearch(runner func(int) (*BoundarySearchR
 
 		// 失敗した場合、その前の成功値が境界となる
 		if lastSuccessValue > 0 {
+			if bs.verbose != nil {
+				bs.verbose.LogCompletion("Exponential Search", lastSuccessValue, lastSuccessValue)
+			}
 			return &BoundarySearchResult{
 				Value:           lastSuccessValue,
 				Success:         true,

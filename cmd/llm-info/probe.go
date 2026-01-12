@@ -157,12 +157,18 @@ func probeCommand(args []string) error {
 	// 実行モードに応じて探索を実行
 	if *contextOnly {
 		// Context Windowのみ測定
-		if *verbose {
-			fmt.Printf("Probing context window for model %s...\n", *model)
-		}
-
 		start := time.Now()
 		prober := probe.NewContextWindowProbe(client)
+
+		// Verbose formatter for real-time output
+		var verboseFormatter *ui.VerboseFormatter
+		if *verbose {
+			verboseFormatter = ui.NewVerboseFormatter()
+			prober.SetVerboseLogger(verboseFormatter)
+			defer verboseFormatter.Finish()
+		} else {
+			fmt.Printf("Probing context window for model %s...\n", *model)
+		}
 
 		// needle位置を設定
 		position := probe.End
@@ -432,9 +438,12 @@ func probeContextCommand(args []string) error {
 	// Context Window Proberを作成
 	prober := probe.NewContextWindowProbe(client)
 
-	// 実行
+	// Verbose formatter for real-time output
+	var verboseFormatter *ui.VerboseFormatter
 	if *verbose {
-		fmt.Printf("Probing context window for model %s...\n", *model)
+		verboseFormatter = ui.NewVerboseFormatter()
+		prober.SetVerboseLogger(verboseFormatter)
+		defer verboseFormatter.Finish()
 	}
 
 	var result *probe.ContextWindowResult
@@ -632,8 +641,13 @@ func probeMaxOutputCommand(args []string) error {
 	// Max Output Tokens Proberを作成
 	prober := probe.NewMaxOutputTokensProbe(client)
 
-	// 実行
+	// Verbose formatter for real-time output
+	var verboseFormatter *ui.VerboseFormatter
 	if *verbose {
+		verboseFormatter = ui.NewVerboseFormatter()
+		prober.SetVerboseLogger(verboseFormatter)
+		defer verboseFormatter.Finish()
+	} else {
 		fmt.Printf("Probing max output tokens for model %s...\n", *model)
 	}
 
@@ -913,7 +927,7 @@ EXAMPLES:
     llm-info probe-context --model gpt-4o-mini --needle-keyword "東京タワーは333メートルです" --needle-answer "333メートル"
 
     # Test all positions
-    llm-info probe-context --model gpt-4o-mini --test-all-positions --verbose)
+    llm-info probe-context --model gpt-4o-mini --test-all-positions --verbose`)
 }
 
 // showContextExecutionPlan はContext Window探索の実行計画を表示する
@@ -937,49 +951,46 @@ func showContextExecutionPlan(model string, config *internalConfig.ResolvedConfi
 
 // showProbeMaxOutputHelp はprobe-max-outputコマンドのヘルプを表示する
 func showProbeMaxOutputHelp() {
-	fmt.Println(`llm-info probe-max-output - Probe max output tokens constraints via actual API behavior
-
-USAGE:
-    llm-info probe-max-output --model <MODEL_ID> [flags]
-
-FLAGS:
-    --model string      Target model ID (required)
-    --url string         Base URL of the LLM gateway
-    --api-key string     API key for authentication
-    --gateway string     Gateway name to use from config
-    --timeout duration   Request timeout (default: 30s)
-    --dry-run           Show execution plan without making actual API calls
-    --verbose           Show verbose logs
-    --log-dir string     Directory to save probe logs
-    --save-result       Save probe results to file
-    --no-log           Disable logging
-    --format string     Output format (table, json) (default: table)
-    --config string      Path to config file
-    --help              Show help for probe-max-output command
-
-EXAMPLES:
-    # Basic usage
-    llm-info probe-max-output --model gpt-4o-mini
-
-    # With custom gateway
-    llm-info probe-max-output --model gpt-4o-mini --gateway production
-
-    # Dry run to see execution plan
-    llm-info probe-max-output --model gpt-4o-mini --dry-run
-
-    # Verbose output
-    llm-info probe-max-output --model gpt-4o-mini --verbose
-
-# Verbose output
-    llm-info probe-max-output --model gpt-4o-mini --verbose
-
-    # JSON output
-    llm-info probe-max-output --model gpt-4o-mini --format json
-
-DESCRIPTION:
-    This command determines the maximum number of tokens a model can generate
-    in a single response through binary search and exponential search.
-    It detects limits via validation errors and incomplete response status.`)
+	fmt.Println("llm-info probe-max-output - Probe max output tokens constraints via actual API behavior")
+	fmt.Println("")
+	fmt.Println("USAGE:")
+	fmt.Println("    llm-info probe-max-output --model <MODEL_ID> [flags]")
+	fmt.Println("")
+	fmt.Println("FLAGS:")
+	fmt.Println("    --model string      Target model ID (required)")
+	fmt.Println("    --url string         Base URL of the LLM gateway")
+	fmt.Println("    --api-key string     API key for authentication")
+	fmt.Println("    --gateway string     Gateway name to use from config")
+	fmt.Println("    --timeout duration   Request timeout (default: 30s)")
+	fmt.Println("    --dry-run           Show execution plan without making actual API calls")
+	fmt.Println("    --verbose           Show verbose logs")
+	fmt.Println("    --log-dir string     Directory to save probe logs")
+	fmt.Println("    --save-result       Save probe results to file")
+	fmt.Println("    --no-log           Disable logging")
+	fmt.Println("    --format string     Output format (table, json) (default: table)")
+	fmt.Println("    --config string      Path to config file")
+	fmt.Println("    --help              Show help for probe-max-output command")
+	fmt.Println("")
+	fmt.Println("EXAMPLES:")
+	fmt.Println("    # Basic usage")
+	fmt.Println("    llm-info probe-max-output --model gpt-4o-mini")
+	fmt.Println("")
+	fmt.Println("    # With custom gateway")
+	fmt.Println("    llm-info probe-max-output --model gpt-4o-mini --gateway production")
+	fmt.Println("")
+	fmt.Println("    # Dry run to see execution plan")
+	fmt.Println("    llm-info probe-max-output --model gpt-4o-mini --dry-run")
+	fmt.Println("")
+	fmt.Println("    # Verbose output")
+	fmt.Println("    llm-info probe-max-output --model gpt-4o-mini --verbose")
+	fmt.Println("")
+	fmt.Println("    # JSON output")
+	fmt.Println("    llm-info probe-max-output --model gpt-4o-mini --format json")
+	fmt.Println("")
+	fmt.Println("DESCRIPTION:")
+	fmt.Println("    This command determines the maximum number of tokens a model can generate")
+	fmt.Println("    in a single response through binary search and exponential search.")
+	fmt.Println("    It detects limits via validation errors and incomplete response status.")
 }
 
 // showMaxOutputExecutionPlan はMax Output Tokens探索の実行計画を表示する

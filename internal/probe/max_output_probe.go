@@ -25,6 +25,11 @@ func NewMaxOutputTokensProbe(client *api.ProbeClient) *MaxOutputTokensProbe {
 	}
 }
 
+// SetVerboseLogger sets the verbose logger for real-time output
+func (p *MaxOutputTokensProbe) SetVerboseLogger(verbose VerboseLogger) {
+	p.searcher.SetVerboseLogger(verbose)
+}
+
 // ProbeOutputTokens は指定されたモデルのmax output tokensを推定する
 func (p *MaxOutputTokensProbe) ProbeOutputTokens(model string, verbose bool) (*MaxOutputResult, error) {
 	startTime := time.Now()
@@ -96,7 +101,7 @@ func (p *MaxOutputTokensProbe) ProbeOutputTokens(model string, verbose bool) (*M
 }
 
 // testWithMaxTokens は指定されたmax tokensでテストを実行する
-func (p *MaxOutputTokensProbe) testWithMaxTokens(model string, inputTokens, maxTokens int, verbose bool) (*BoundarySearchResult, error) {
+func (p *MaxOutputTokensProbe) testWithMaxTokens(model string, inputTokens, maxTokens int, _ bool) (*BoundarySearchResult, error) {
 	// APIクライアント設定
 	cfg := p.client.GetConfig()
 	adjustedCfg := config.NewAppConfig()
@@ -106,8 +111,32 @@ func (p *MaxOutputTokensProbe) testWithMaxTokens(model string, inputTokens, maxT
 
 	client := api.NewProbeClient(adjustedCfg)
 
+	// Log API request details if verbose logger is available
+	if p.searcher.verbose != nil {
+		p.searcher.verbose.LogAPIRequest("POST", cfg.BaseURL+"/v1/chat/completions", inputTokens, 0)
+	}
+
 	// APIリクエストを送信
+	start := time.Now()
 	response, err := client.ProbeModel(model)
+	duration := time.Since(start)
+
+	// Log API response if verbose logger is available
+	if p.searcher.verbose != nil {
+		status := 200 // Default to success status
+		promptTokens := 0
+		completionTokens := 0
+		if response != nil {
+			if response.Error != nil {
+				status = 400
+			}
+			if response.Usage != nil {
+				promptTokens = response.Usage.PromptTokens
+				completionTokens = response.Usage.CompletionTokens
+			}
+		}
+		p.searcher.verbose.LogAPIResponse(status, promptTokens, completionTokens, duration)
+	}
 	if err != nil {
 		// エラーメッセージから情報を抽出
 		errorMessage := ""

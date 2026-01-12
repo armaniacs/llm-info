@@ -26,8 +26,16 @@ func NewContextWindowProbe(client *api.ProbeClient) *ContextWindowProbe {
 	}
 }
 
+// SetVerboseLogger sets the verbose logger for real-time output
+func (p *ContextWindowProbe) SetVerboseLogger(verbose VerboseLogger) {
+	p.searcher.SetVerboseLogger(verbose)
+}
+
 // Probe は指定されたモデルのcontext windowを推定する
 func (p *ContextWindowProbe) Probe(model string, verbose bool) (*ContextWindowResult, error) {
+	// Reset comprehension results to prevent memory leak
+	p.lastComprehensionResult = p.lastComprehensionResult[:0]
+
 	startTime := time.Now()
 
 	// 第1段階: 指数探索で上限を特定
@@ -86,7 +94,10 @@ func (p *ContextWindowProbe) Probe(model string, verbose bool) (*ContextWindowRe
 }
 
 // ProbeWithNeedle はneedle位置を指定してcontext windowを推定する
-func (p *ContextWindowProbe) ProbeWithNeedle(model string, position NeedlePosition, needleKeyword, needleAnswer string, verbose bool) (*ContextWindowResult, error) {
+func (p *ContextWindowProbe) ProbeWithNeedle(model string, position NeedlePosition, needleKeyword, needleAnswer string, _ bool) (*ContextWindowResult, error) {
+	// Reset comprehension results to prevent memory leak
+	p.lastComprehensionResult = p.lastComprehensionResult[:0]
+
 	startTime := time.Now()
 
 	// デフォルト値を設定
@@ -99,7 +110,7 @@ func (p *ContextWindowProbe) ProbeWithNeedle(model string, position NeedlePositi
 
 	// 第1段階: 指数探索で上限を特定
 	upperLimit, err := p.searcher.ExponentialSearch(func(tokens int) (*BoundarySearchResult, error) {
-		return p.testWithNeedlePosition(model, tokens, position, needleKeyword, needleAnswer, verbose)
+		return p.testWithNeedlePosition(model, tokens, position, needleKeyword, needleAnswer, false)
 	})
 
 	if err != nil {
@@ -141,7 +152,7 @@ func (p *ContextWindowProbe) ProbeWithNeedle(model string, position NeedlePositi
 
 	// 第2段階: 二分探索で境界を絞る
 	boundaryResult, err := p.searcher.Search(upperLimit.Value-1024, upperLimit.Value+1024, func(tokens int) (*BoundarySearchResult, error) {
-		return p.testWithNeedlePosition(model, tokens, position, needleKeyword, needleAnswer, verbose)
+		return p.testWithNeedlePosition(model, tokens, position, needleKeyword, needleAnswer, false)
 	})
 
 	if err != nil {
@@ -165,7 +176,10 @@ func (p *ContextWindowProbe) ProbeWithNeedle(model string, position NeedlePositi
 }
 
 // ProbeAllNeedlePositions は全てのneedle位置をテストする
-func (p *ContextWindowProbe) ProbeAllNeedlePositions(model string, needleKeyword, needleAnswer string, verbose bool) (*ContextWindowResult, error) {
+func (p *ContextWindowProbe) ProbeAllNeedlePositions(model string, needleKeyword, needleAnswer string, _ bool) (*ContextWindowResult, error) {
+	// Reset comprehension results to prevent memory leak
+	p.lastComprehensionResult = p.lastComprehensionResult[:0]
+
 	startTime := time.Now()
 
 	// デフォルト値を設定
@@ -183,12 +197,12 @@ func (p *ContextWindowProbe) ProbeAllNeedlePositions(model string, needleKeyword
 
 	// 各位置でテストを実行
 	for _, pos := range positions {
-		if verbose {
-			fmt.Printf("Testing needle at position: %s\n", pos)
+		if p.searcher.verbose != nil {
+			p.searcher.verbose.LogInfo(fmt.Sprintf("Testing needle at position: %s", pos))
 		}
 
 		upperLimit, err := p.searcher.ExponentialSearch(func(tokens int) (*BoundarySearchResult, error) {
-			return p.testWithNeedlePosition(model, tokens, pos, needleKeyword, needleAnswer, verbose)
+			return p.testWithNeedlePosition(model, tokens, pos, needleKeyword, needleAnswer, false)
 		})
 
 		if err != nil {
@@ -259,13 +273,13 @@ func (p *ContextWindowProbe) ProbeAllNeedlePositions(model string, needleKeyword
 }
 
 // testWithNeedlePosition はneedle位置を指定してテストを実行する
-func (p *ContextWindowProbe) testWithNeedlePosition(model string, tokens int, position NeedlePosition, needleKeyword, needleAnswer string, verbose bool) (*BoundarySearchResult, error) {
+func (p *ContextWindowProbe) testWithNeedlePosition(model string, tokens int, position NeedlePosition, needleKeyword, needleAnswer string, _ bool) (*BoundarySearchResult, error) {
 	// テストデータを生成
 	content, _ := p.generator.GenerateWithNeedlePosition(tokens, position)
 
 	// needleキーワードと回答を置換
-	content = strings.Replace(content, "【重要情報】ラッキーカラーは青色です", needleKeyword, -1)
-	content = strings.Replace(content, "ラッキーカラーは何色でしたか？", strings.Split(needleKeyword, "は")[1]+"は何色でしたか？", -1)
+	content = strings.ReplaceAll(content, "【重要情報】ラッキーカラーは青色です", needleKeyword)
+	content = strings.ReplaceAll(content, "ラッキーカラーは何色でしたか？", strings.Split(needleKeyword, "は")[1]+"は何色でしたか？")
 
 	// APIクライアントを作成（既存のprobeクライアントを利用）
 	cfg := p.client.GetConfig()
@@ -278,8 +292,33 @@ func (p *ContextWindowProbe) testWithNeedlePosition(model string, tokens int, po
 
 	client := api.NewProbeClient(adjustedCfg)
 
+	// Log API request details if verbose logger is available
+	if p.searcher.verbose != nil {
+		p.searcher.verbose.LogAPIRequest("POST", cfg.BaseURL+"/v1/chat/completions", tokens, 0)
+	}
+
 	// APIリクエストを送信
+	start := time.Now()
 	response, err := client.ProbeModelWithContent(model, content)
+	duration := time.Since(start)
+
+	// Log API response if verbose logger is available
+	if p.searcher.verbose != nil {
+		status := 200 // Default to success status
+		promptTokens := 0
+		completionTokens := 0
+		if response != nil {
+			if response.Error != nil {
+				status = 400
+			}
+			if response.Usage != nil {
+				promptTokens = response.Usage.PromptTokens
+				completionTokens = response.Usage.CompletionTokens
+			}
+		}
+		p.searcher.verbose.LogAPIResponse(status, promptTokens, completionTokens, duration)
+	}
+
 	if err != nil {
 		// エラーメッセージから情報を抽出
 		errorMessage := ""
@@ -329,7 +368,7 @@ func (p *ContextWindowProbe) testWithNeedlePosition(model string, tokens int, po
 }
 
 // testWithTokenCount は指定されたトークン数でテストを実行する
-func (p *ContextWindowProbe) testWithTokenCount(model string, tokens int, verbose bool) (*BoundarySearchResult, error) {
+func (p *ContextWindowProbe) testWithTokenCount(model string, tokens int, _ bool) (*BoundarySearchResult, error) {
 	// テストデータを生成
 	_, _ = p.generator.GenerateData(tokens)
 
@@ -344,8 +383,33 @@ func (p *ContextWindowProbe) testWithTokenCount(model string, tokens int, verbos
 
 	client := api.NewProbeClient(adjustedCfg)
 
+	// Log API request details if verbose logger is available
+	if p.searcher.verbose != nil {
+		p.searcher.verbose.LogAPIRequest("POST", cfg.BaseURL+"/v1/chat/completions", tokens, 0)
+	}
+
 	// APIリクエストを送信
+	start := time.Now()
 	response, err := client.ProbeModel(model)
+	duration := time.Since(start)
+	// Log API response if verbose logger is available
+	if p.searcher.verbose != nil {
+		status := 200 // Default to success status
+		promptTokens := 0
+		completionTokens := 0
+		if response != nil {
+			if response.Error != nil {
+				// For errors, we might not have proper status
+				status = 400
+			}
+			if response.Usage != nil {
+				promptTokens = response.Usage.PromptTokens
+				completionTokens = response.Usage.CompletionTokens
+			}
+		}
+		p.searcher.verbose.LogAPIResponse(status, promptTokens, completionTokens, duration)
+	}
+
 	if err != nil {
 		// エラーメッセージから情報を抽出
 		errorMessage := ""
