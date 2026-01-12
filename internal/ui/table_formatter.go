@@ -91,6 +91,26 @@ func (tf *TableFormatter) FormatContextWindowResult(result *probe.ContextWindowR
 		sb.WriteString(fmt.Sprintf("%-22s %s tokens\n", "Max Input at Success:", formatNumber(result.MaxInputAtSuccess)))
 	}
 
+	// Needle test information (if available)
+	if result.NeedleComprehension || len(result.NeedleTests) > 0 {
+		sb.WriteString(fmt.Sprintf("%-22s %s\n", "Needle Position:", result.NeedlePosition))
+		sb.WriteString(fmt.Sprintf("%-22s %s\n", "Needle Keyword:", result.NeedleKeyword))
+		if result.NeedleComprehension {
+			sb.WriteString(fmt.Sprintf("%-22s %s\n", "Comprehension:", "✓"))
+		} else if len(result.NeedleTests) > 0 {
+			// Show individual position results
+			sb.WriteString("Needle Position Tests:\n")
+			for _, test := range result.NeedleTests {
+				status := "✗"
+				if test.Comprehension {
+					status = "✓"
+				}
+				sb.WriteString(fmt.Sprintf("  %s: %s (%s tokens)", test.Position, status, formatNumber(test.TokenCount)))
+			}
+			sb.WriteString("\n")
+		}
+	}
+
 	sb.WriteString("\n")
 
 	// ステータス

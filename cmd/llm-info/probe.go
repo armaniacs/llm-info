@@ -6,6 +6,7 @@ import (
 	"os"
 	"strings"
 	"time"
+	"encoding/json"
 
 	"github.com/armaniacs/llm-info/internal/api"
 	internalConfig "github.com/armaniacs/llm-info/internal/config"
@@ -40,6 +41,11 @@ func probeCommand(args []string) error {
 	noLog := probeCmd.Bool("no-log", false, "Disable logging")
 	contextOnly := probeCmd.Bool("context-only", false, "Probe only context window")
 	outputOnly := probeCmd.Bool("output-only", false, "Probe only max output tokens")
+	outputFormat := probeCmd.String("format", "table", "Output format (table, json)")
+	needlePosition := probeCmd.String("needle-position", "end", "Needle position (end, middle, 80pct)")
+	needleKeyword := probeCmd.String("needle-keyword", "", "Custom needle keyword (default: ラッキーカラーは青色です)")
+	needleAnswer := probeCmd.String("needle-answer", "", "Expected answer for needle (default: 青色)")
+	testAllPositions := probeCmd.Bool("test-all-positions", false, "Test all needle positions (will triple the cost)")
 	showHelp := probeCmd.Bool("help", false, "Show help for probe command")
 
 	// フラグを解析
@@ -157,7 +163,21 @@ func probeCommand(args []string) error {
 
 		start := time.Now()
 		prober := probe.NewContextWindowProbe(client)
-		contextResult, err = prober.Probe(*model, *verbose)
+
+		// needle位置を設定
+		position := probe.End
+		switch *needlePosition {
+		case "middle":
+			position = probe.Middle
+		case "80pct":
+			position = probe.Percent80
+		}
+
+		if *testAllPositions {
+			contextResult, err = prober.ProbeAllNeedlePositions(*model, *needleKeyword, *needleAnswer, *verbose)
+		} else {
+			contextResult, err = prober.ProbeWithNeedle(*model, position, *needleKeyword, *needleAnswer, *verbose)
+		}
 		if err != nil {
 			return fmt.Errorf("failed to probe context window: %w", err)
 		}
@@ -215,9 +235,31 @@ func probeCommand(args []string) error {
 	}
 
 	// 統合結果を表示
-	formatter := ui.NewTableFormatter()
-	output := formatter.FormatIntegratedResult(*model, contextResult, outputResult, totalDuration, totalTrials)
-	fmt.Println(output)
+	if *outputFormat == "json" {
+		// JSON形式で出力
+		result := map[string]interface{}{
+			"model":             *model,
+			"context_window":    contextResult,
+			"max_output_tokens": outputResult,
+			"summary": map[string]interface{}{
+				"total_trials":     totalTrials,
+				"total_duration":   totalDuration.Seconds(),
+				"success":          (contextResult != nil && contextResult.Success) && (outputResult != nil && outputResult.Success),
+			},
+			"timestamp": time.Now().Format(time.RFC3339),
+		}
+		
+		encoder := json.NewEncoder(os.Stdout)
+		encoder.SetIndent("", "  ")
+		if err := encoder.Encode(result); err != nil {
+			return fmt.Errorf("failed to encode JSON: %w", err)
+		}
+	} else {
+		// テーブル形式で出力
+		formatter := ui.NewTableFormatter()
+		output := formatter.FormatIntegratedResult(*model, contextResult, outputResult, totalDuration, totalTrials)
+		fmt.Println(output)
+	}
 
 	// ログ保存
 	if logger != nil {
@@ -305,6 +347,11 @@ func probeContextCommand(args []string) error {
 	logDir := probeCmd.String("log-dir", "", "Directory to save probe logs")
 	saveResult := probeCmd.Bool("save-result", false, "Save probe results to file")
 	noLog := probeCmd.Bool("no-log", false, "Disable logging")
+	outputFormat := probeCmd.String("format", "table", "Output format (table, json)")
+	needlePosition := probeCmd.String("needle-position", "end", "Needle position (end, middle, 80pct)")
+	needleKeyword := probeCmd.String("needle-keyword", "", "Custom needle keyword (default: ラッキーカラーは青色です)")
+	needleAnswer := probeCmd.String("needle-answer", "", "Expected answer for needle (default: 青色)")
+	testAllPositions := probeCmd.Bool("test-all-positions", false, "Test all needle positions (will triple the cost)")
 	showHelp := probeCmd.Bool("help", false, "Show help for probe-context command")
 
 	// フラグを解析
@@ -321,6 +368,19 @@ func probeContextCommand(args []string) error {
 		fmt.Fprintf(os.Stderr, "Error: --model is required\n\n")
 		showProbeContextHelp()
 		os.Exit(1)
+	}
+
+	// needle positionの検証
+	validPositions := map[string]bool{"end": true, "middle": true, "80pct": true}
+	if !validPositions[*needlePosition] {
+		fmt.Fprintf(os.Stderr, "Error: invalid needle-position '%s'. Valid values: end, middle, 80pct\n\n", *needlePosition)
+		showProbeContextHelp()
+		os.Exit(1)
+	}
+
+	// test-all-positions の警告
+	if *testAllPositions {
+		fmt.Println("⚠️  Testing all needle positions will triple the API call cost")
 	}
 
 	// 設定マネージャーの準備
@@ -377,20 +437,58 @@ func probeContextCommand(args []string) error {
 		fmt.Printf("Probing context window for model %s...\n", *model)
 	}
 
-	result, err := prober.Probe(*model, *verbose)
+	var result *probe.ContextWindowResult
+
+	// needle positionを設定
+	position := probe.End
+	switch *needlePosition {
+	case "middle":
+		position = probe.Middle
+	case "80pct":
+		position = probe.Percent80
+	}
+
+	if *testAllPositions {
+		// 全ての位置をテスト
+		result, err = prober.ProbeAllNeedlePositions(*model, *needleKeyword, *needleAnswer, *verbose)
+	} else {
+		// 単一の位置をテスト
+		result, err = prober.ProbeWithNeedle(*model, position, *needleKeyword, *needleAnswer, *verbose)
+	}
+
 	if err != nil {
 		return fmt.Errorf("failed to probe context window: %w", err)
 	}
 
-	// テーブル形式で出力
-	formatter := ui.NewTableFormatter()
-	output := formatter.FormatContextWindowResult(result)
-	fmt.Println(output)
+	// 結果を表示
+	if *outputFormat == "json" {
+		// JSON形式で出力
+		jsonResult := map[string]interface{}{
+			"model":           *model,
+			"type":            "context_window",
+			"result":          result,
+			"timestamp":       time.Now().Format(time.RFC3339),
+		}
+		
+		encoder := json.NewEncoder(os.Stdout)
+		encoder.SetIndent("", "  ")
+		if err := encoder.Encode(jsonResult); err != nil {
+			return fmt.Errorf("failed to encode JSON: %w", err)
+		}
+	} else {
+		// テーブル形式で出力
+		formatter := ui.NewTableFormatter()
+		output := formatter.FormatContextWindowResult(result)
+		fmt.Println(output)
+	}
 
 	// verbose時は履歴も表示
 	if *verbose && len(result.TrialHistory) > 0 {
-		history := formatter.FormatVerboseHistory(result.TrialHistory)
-		fmt.Println(history)
+		if *outputFormat == "table" {
+			formatter := ui.NewTableFormatter()
+			history := formatter.FormatVerboseHistory(result.TrialHistory)
+			fmt.Println(history)
+		}
 	}
 
 	// デフォルトのログ設定を取得
@@ -466,6 +564,7 @@ func probeMaxOutputCommand(args []string) error {
 	logDir := probeCmd.String("log-dir", "", "Directory to save probe logs")
 	saveResult := probeCmd.Bool("save-result", false, "Save probe results to file")
 	noLog := probeCmd.Bool("no-log", false, "Disable logging")
+	outputFormat := probeCmd.String("format", "table", "Output format (table, json)")
 	showHelp := probeCmd.Bool("help", false, "Show help for probe-max-output command")
 
 	// フラグを解析
@@ -543,15 +642,35 @@ func probeMaxOutputCommand(args []string) error {
 		return fmt.Errorf("failed to probe max output tokens: %w", err)
 	}
 
-	// テーブル形式で出力
-	formatter := ui.NewTableFormatter()
-	output := formatter.FormatMaxOutputResult(result)
-	fmt.Println(output)
+	// 結果を表示
+	if *outputFormat == "json" {
+		// JSON形式で出力
+		jsonResult := map[string]interface{}{
+			"model":     *model,
+			"type":      "max_output",
+			"result":    result,
+			"timestamp": time.Now().Format(time.RFC3339),
+		}
+		
+		encoder := json.NewEncoder(os.Stdout)
+		encoder.SetIndent("", "  ")
+		if err := encoder.Encode(jsonResult); err != nil {
+			return fmt.Errorf("failed to encode JSON: %w", err)
+		}
+	} else {
+		// テーブル形式で出力
+		formatter := ui.NewTableFormatter()
+		output := formatter.FormatMaxOutputResult(result)
+		fmt.Println(output)
+	}
 
 	// verbose時は履歴も表示
 	if *verbose && len(result.TrialHistory) > 0 {
-		history := formatter.FormatVerboseHistory(result.TrialHistory)
-		fmt.Println(history)
+		if *outputFormat == "table" {
+			formatter := ui.NewTableFormatter()
+			history := formatter.FormatVerboseHistory(result.TrialHistory)
+			fmt.Println(history)
+		}
 	}
 
 	// デフォルトのログ設定を取得
@@ -632,6 +751,7 @@ FLAGS:
     --no-log                   Disable logging
     --context-only              Probe only context window
     --output-only               Probe only max output tokens
+    --format string             Output format (table, json) (default: table)
     --config string              Path to config file
     --help                      Show help for probe command
 
@@ -655,7 +775,13 @@ EXAMPLES:
     llm-info probe --model gpt-4o-mini --output-only
 
     # Save results and logs
-    llm-info probe --model gpt-4o-mini --save-result --log-dir ./logs`)
+    llm-info probe --model gpt-4o-mini --save-result --log-dir ./logs
+
+    # JSON output
+    llm-info probe --model gpt-4o-mini --format json
+
+    # JSON output with verbose information
+    llm-info probe --model gpt-4o-mini --format json --verbose`)
 }
 
 // showIntegratedExecutionPlan は統合探索の実行計画を表示する
@@ -756,6 +882,11 @@ FLAGS:
     --log-dir string     Directory to save probe logs
     --save-result       Save probe results to file
     --no-log           Disable logging
+    --format string     Output format (table, json) (default: table)
+    --needle-position string Needle position (end, middle, 80pct)
+    --needle-keyword string Custom needle keyword (default: ラッキーカラーは青色です)
+    --needle-answer string  Expected answer for needle (default: 青色)
+    --test-all-positions  Test all needle positions (will triple the cost)
     --config string      Path to config file
     --help              Show help for probe-context command
 
@@ -770,7 +901,19 @@ EXAMPLES:
     llm-info probe-context --model gpt-4o-mini --dry-run
 
     # Verbose output
-    llm-info probe-context --model gpt-4o-mini --verbose`)
+    llm-info probe-context --model gpt-4o-mini --verbose
+
+    # JSON output
+    llm-info probe-context --model gpt-4o-mini --format json
+
+    # Needle at middle position (detect lost-in-the-middle)
+    llm-info probe-context --model gpt-4o-mini --needle-position middle
+
+    # Custom needle and answer
+    llm-info probe-context --model gpt-4o-mini --needle-keyword "東京タワーは333メートルです" --needle-answer "333メートル"
+
+    # Test all positions
+    llm-info probe-context --model gpt-4o-mini --test-all-positions --verbose)
 }
 
 // showContextExecutionPlan はContext Window探索の実行計画を表示する
@@ -810,6 +953,7 @@ FLAGS:
     --log-dir string     Directory to save probe logs
     --save-result       Save probe results to file
     --no-log           Disable logging
+    --format string     Output format (table, json) (default: table)
     --config string      Path to config file
     --help              Show help for probe-max-output command
 
@@ -825,6 +969,12 @@ EXAMPLES:
 
     # Verbose output
     llm-info probe-max-output --model gpt-4o-mini --verbose
+
+# Verbose output
+    llm-info probe-max-output --model gpt-4o-mini --verbose
+
+    # JSON output
+    llm-info probe-max-output --model gpt-4o-mini --format json
 
 DESCRIPTION:
     This command determines the maximum number of tokens a model can generate

@@ -145,3 +145,55 @@ func (pc *ProbeClient) ProbeModel(modelID string) (*ProbeResponse, error) {
 
 	return &probeResp, nil
 }
+
+// ProbeModelWithContent はカスタムコンテンツでモデルの制約値を探索する
+func (pc *ProbeClient) ProbeModelWithContent(modelID string, content string) (*ProbeResponse, error) {
+	// リクエストを作成
+	req := ProbeRequest{
+		Model: modelID,
+		Messages: []Message{
+			{Role: "user", Content: content},
+		},
+		MaxTokens:   16,
+		Temperature: 0,
+	}
+
+	// JSONにエンコード
+	jsonBody, err := json.Marshal(req)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal request: %w", err)
+	}
+
+	// HTTPリクエストを作成
+	httpReq, err := http.NewRequest("POST", pc.config.BaseURL+"/v1/chat/completions", bytes.NewBuffer(jsonBody))
+	if err != nil {
+		return nil, fmt.Errorf("failed to create request: %w", err)
+	}
+
+	// ヘッダーを設定
+	httpReq.Header.Set("Content-Type", "application/json")
+	httpReq.Header.Set("Authorization", fmt.Sprintf("Bearer %s", pc.config.APIKey))
+
+	// リクエストを送信
+	resp, err := pc.client.Do(httpReq)
+	if err != nil {
+		return nil, fmt.Errorf("failed to send request: %w", err)
+	}
+	defer resp.Body.Close()
+
+	// レスポンスを読み込む
+	var probeResp ProbeResponse
+	if err := json.NewDecoder(resp.Body).Decode(&probeResp); err != nil {
+		return nil, fmt.Errorf("failed to decode response: %w", err)
+	}
+
+	// ステータスコードをチェック
+	if resp.StatusCode != http.StatusOK {
+		if probeResp.Error != nil {
+			return &probeResp, fmt.Errorf("API error (%s): %s", probeResp.Error.Type, probeResp.Error.Message)
+		}
+		return nil, fmt.Errorf("unexpected status code: %d", resp.StatusCode)
+	}
+
+	return &probeResp, nil
+}
