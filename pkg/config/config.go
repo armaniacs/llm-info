@@ -24,6 +24,7 @@ type Global struct {
 	Timeout      time.Duration `yaml:"timeout"`
 	OutputFormat string        `yaml:"output_format"`
 	SortBy       string        `yaml:"sort_by"`
+	Cost         CostConfig    `yaml:"cost"`
 }
 
 // ConfigSource は設定ソースの種類を表す
@@ -87,6 +88,19 @@ type OutputConfig struct {
 type TableConfig struct {
 	AlwaysShow      []string `yaml:"always_show"`
 	ShowIfAvailable []string `yaml:"show_if_available"`
+}
+
+// CostConfig はコスト計算の設定です
+type CostConfig struct {
+	WarningThreshold float64              `yaml:"warning_threshold"` // Default: 0.05
+	Pricing         map[string]Pricing    `yaml:"pricing"`
+	Enabled         bool                  `yaml:"enabled"`
+}
+
+// Pricing はモデルごとの料金レートです
+type Pricing struct {
+	InputPricePer1K  float64 `yaml:"input_price_per_1k"`   // e.g., 0.0025 for gpt-4
+	OutputPricePer1K float64 `yaml:"output_price_per_1k"`  // e.g., 0.01 for gpt-4
 }
 
 // AppConfig はアプリケーション設定です

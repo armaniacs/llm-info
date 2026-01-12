@@ -39,3 +39,29 @@ global:
   
   # デフォルトのソート項目 (name, max_tokens, mode, input_cost)
   sort_by: "name"
+  
+  # コスト計算設定
+  cost:
+    # 警告を表示するコスト閾値（USD）
+    warning_threshold: 0.05
+    
+    # モデルごとの料金レート（2026年1月時点の例）
+    pricing:
+      "gpt-4o":
+        input_price_per_1k: 0.0025
+        output_price_per_1k: 0.01
+      "gpt-4o-mini":
+        input_price_per_1k: 0.00015
+        output_price_per_1k: 0.0006
+      "claude-3-5-sonnet":
+        input_price_per_1k: 0.003
+        output_price_per_1k: 0.015
+      "gemini-1.5-pro":
+        input_price_per_1k: 0.00025
+        output_price_per_1k: 0.0005
+      "glm-4.6":
+        input_price_per_1k: 0.0001
+        output_price_per_1k: 0.0001
+        
+    # コスト計算機能を有効にするかどうか
+    enabled: true

@@ -478,6 +478,7 @@ type TrialInfo struct {
 	TokenCount int
 	Success    bool
 	Message    string
+	Usage      *api.UsageInfo // API使用量情報
 }
 
 // ContextWindowResult は探索結果を表す

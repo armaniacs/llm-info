@@ -1,15 +1,16 @@
 package main
 
 import (
+	"encoding/json"
 	"flag"
 	"fmt"
 	"os"
 	"strings"
 	"time"
-	"encoding/json"
 
 	"github.com/armaniacs/llm-info/internal/api"
 	internalConfig "github.com/armaniacs/llm-info/internal/config"
+	"github.com/armaniacs/llm-info/internal/cost"
 	"github.com/armaniacs/llm-info/internal/logging"
 	"github.com/armaniacs/llm-info/internal/probe"
 	"github.com/armaniacs/llm-info/internal/storage"
@@ -46,6 +47,7 @@ func probeCommand(args []string) error {
 	needleKeyword := probeCmd.String("needle-keyword", "", "Custom needle keyword (default: ラッキーカラーは青色です)")
 	needleAnswer := probeCmd.String("needle-answer", "", "Expected answer for needle (default: 青色)")
 	testAllPositions := probeCmd.Bool("test-all-positions", false, "Test all needle positions (will triple the cost)")
+	showCost := probeCmd.Bool("show-cost", false, "Show API usage cost summary")
 	showHelp := probeCmd.Bool("help", false, "Show help for probe command")
 
 	// フラグを解析
@@ -105,6 +107,14 @@ func probeCommand(args []string) error {
 	// Dry-runモードの場合は実行計画を表示
 	if *dryRun {
 		showIntegratedExecutionPlan(*model, resolved, *contextOnly, *outputOnly)
+
+		// コスト概算表示
+		if *showCost && resolved.Cost != nil && resolved.Cost.Enabled {
+			calculator := cost.NewCalculator(resolved.Cost, *model)
+			summary := cost.EstimateUsage(calculator, *model, *contextOnly, *outputOnly)
+			fmt.Print(ui.FormatDryRunCostEstimate(summary, calculator))
+		}
+
 		return nil
 	}
 
@@ -240,6 +250,46 @@ func probeCommand(args []string) error {
 		}
 	}
 
+	// コスト集計
+	var costSummary *cost.UsageSummary
+	if *showCost && resolved.Cost != nil && resolved.Cost.Enabled {
+		calculator := cost.NewCalculator(resolved.Cost, *model)
+
+		// TrialHistoryからTrialUsageに変換
+		var contextTrials []cost.TrialUsage
+		var outputTrials []cost.TrialUsage
+
+		if contextResult != nil {
+			for _, trial := range contextResult.TrialHistory {
+				if trial.Usage != nil {
+					contextTrials = append(contextTrials, cost.TrialUsage{
+						PromptTokens:     trial.Usage.PromptTokens,
+						CompletionTokens: trial.Usage.CompletionTokens,
+					})
+				}
+			}
+		}
+
+		if outputResult != nil {
+			for _, trial := range outputResult.TrialHistory {
+				if trial.Usage != nil {
+					outputTrials = append(outputTrials, cost.TrialUsage{
+						PromptTokens:     trial.Usage.PromptTokens,
+						CompletionTokens: trial.Usage.CompletionTokens,
+					})
+				}
+			}
+		}
+
+		costSummary = cost.AggregateFromTrials(calculator, *model, contextTrials, outputTrials)
+
+		// 警告表示
+		if costSummary.WarningTriggered {
+			fmt.Fprintf(os.Stderr, "\n⚠️  Cost Warning: Total cost ($%.4f) exceeds threshold ($%.2f)\n",
+				costSummary.TotalCost, resolved.Cost.WarningThreshold)
+		}
+	}
+
 	// 統合結果を表示
 	if *outputFormat == "json" {
 		// JSON形式で出力
@@ -254,7 +304,12 @@ func probeCommand(args []string) error {
 			},
 			"timestamp": time.Now().Format(time.RFC3339),
 		}
-		
+
+		// コスト情報をJSONに追加
+		if costSummary != nil {
+			result = ui.AddCostToJSON(result, costSummary)
+		}
+
 		encoder := json.NewEncoder(os.Stdout)
 		encoder.SetIndent("", "  ")
 		if err := encoder.Encode(result); err != nil {
@@ -265,6 +320,12 @@ func probeCommand(args []string) error {
 		formatter := ui.NewTableFormatter()
 		output := formatter.FormatIntegratedResult(*model, contextResult, outputResult, totalDuration, totalTrials)
 		fmt.Println(output)
+
+		// コスト情報をテーブル形式で追加表示
+		if costSummary != nil {
+			calculator := cost.NewCalculator(resolved.Cost, *model)
+			fmt.Print(ui.FormatAPIUsageSummary(costSummary, calculator))
+		}
 	}
 
 	// ログ保存

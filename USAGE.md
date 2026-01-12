@@ -248,6 +248,9 @@ llm-info probe-context --model gpt-4o --timeout 60s
 
 # 実行計画のみ表示（API呼び出しなし）
 llm-info probe-context --model gpt-4o --dry-run
+
+# 実行前にコストを見積もる
+llm-info probe-context --model gpt-4o --dry-run --show-cost
 ```
 
 出力例：
@@ -292,6 +295,9 @@ llm-info probe-max-output --model gpt-4o --verbose --api-key your-key
 
 # 実行計画のみ表示
 llm-info probe-max-output --model gpt-4o --dry-run
+
+# 実行前にコストを見積もる
+llm-info probe-max-output --model gpt-4o --dry-run --show-cost
 ```
 
 出力例：
@@ -320,6 +326,7 @@ Status: ✓ Success
 | `--config` | 設定ファイルのパス |
 | `--verbose` | 詳細な探索履歴を表示 |
 | `--dry-run` | 実行計画の表示のみ（API呼び出しなし） |
+| `--show-cost` | コスト見積もりと実際のコストを表示 |
 | `--help` | コマンド固有のヘルプを表示 |
 
 ## 探索機能の活用例
@@ -432,6 +439,35 @@ global:
   
   # 詳細ログを有効にするかどうか
   verbose: false
+
+# コスト設定
+cost:
+  # コスト警告のしきい値（USD）
+  warning_threshold: 0.05
+  
+  # モデルごとの料金レート（1000トークンあたりUSD）
+  rates:
+    "gpt-4o":
+      prompt: 0.0025
+      completion: 0.01
+    "gpt-4o-mini":
+      prompt: 0.00015
+      completion: 0.0006
+    "claude-3-5-sonnet":
+      prompt: 0.003
+      completion: 0.015
+    "claude-3-haiku":
+      prompt: 0.00025
+      completion: 0.00125
+    "gemini-1.5-pro":
+      prompt: 0.00125
+      completion: 0.005
+    "gemini-1.5-flash":
+      prompt: 0.000075
+      completion: 0.0003
+    "llama-3.1-405b":
+      prompt: 0.0018
+      completion: 0.0018
 ```
 
 ### 設定の優先順位
@@ -647,6 +683,10 @@ A: 現在はプロキシ対応していません。将来の機能で対応予�
 llm-info [オプション]
 llm-info probe-context --model <MODEL_ID> [オプション]
 llm-info probe-max-output --model <MODEL_ID> [オプション]
+
+コスト関連オプション:
+  --show-cost    コスト見積もりと実際のコストを表示
+  --dry-run      実行計画のみ表示（API呼び出しなし）
 ```
 
 ### オプション
@@ -670,6 +710,7 @@ llm-info probe-max-output --model <MODEL_ID> [オプション]
 | `--help-topic` | トピック別ヘルプを表示 | いいえ | - |
 | `--help` | ヘルプメッセージを表示 | いいえ | - |
 | `--version` | バージョン情報を表示 | いいえ | - |
+| `--show-cost` | コスト見積もりと実際のコストを表示 | いいえ | - |
 
 ¹ `--url` は設定ファイルまたは環境変数で指定されていない場合に必須です。
 

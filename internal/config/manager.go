@@ -21,6 +21,7 @@ type ResolvedConfig struct {
 	LogLevel     string
 	UserAgent    string
 	Sources      map[string]config.ConfigSource
+	Cost         *config.CostConfig
 }
 
 // Manager は設定管理機能を提供します
@@ -143,8 +144,31 @@ func (m *Manager) ResolveConfig(cliArgs *CLIArgs) (*ResolvedConfig, error) {
 func (m *Manager) applyDefaults(resolved *ResolvedConfig) error {
 	resolved.OutputFormat = "table"
 	resolved.SortBy = "name"
+	resolved.Cost = &config.CostConfig{
+		WarningThreshold: 0.05,
+		Pricing: map[string]config.Pricing{
+			"gpt-4": {
+				InputPricePer1K:  0.0025,
+				OutputPricePer1K: 0.01,
+			},
+			"gpt-4o": {
+				InputPricePer1K: 0.00015,
+				OutputPricePer1K: 0.0006,
+			},
+			"gpt-4o-mini": {
+				InputPricePer1K: 0.00015,
+				OutputPricePer1K: 0.0006,
+			},
+			"claude-3.5-sonet": {
+				InputPricePer1K: 0.00015,
+				OutputPricePer1K: 0.0006,
+			},
+		},
+		Enabled: true,
+	}
 	resolved.Sources["output_format"] = config.SourceDefault
 	resolved.Sources["sort_by"] = config.SourceDefault
+	resolved.Sources["cost.warning_threshold"] = config.SourceDefault
 	return nil
 }
 
